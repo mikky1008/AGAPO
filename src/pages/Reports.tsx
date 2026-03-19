@@ -32,10 +32,11 @@ const Reports = () => {
   const downloadCSV = (type: "seniors" | "assistance" | "priority") => {
     let csv = "";
     if (type === "seniors") {
-      csv = "Name,Age,Gender,Address,Health Status,Income Level,Living Status,Priority Level\n";
+      csv = "Name,Age,Gender,Address,Illnesses,Income Level,Living Status,Priority Level\n";
       seniors.forEach((s) => {
         const age = calculateAge(s.birth_date);
-        csv += `"${s.first_name} ${s.last_name}",${age},${s.gender},"${s.address}",${s.health_status},${s.income_level || "Low"},${s.living_status || "N/A"},${s.priority_level}\n`;
+        const illnesses = s.illnesses?.join("; ") || "None";
+        csv += `"${s.first_name} ${s.last_name}",${age},${s.gender},"${s.address}","${illnesses}",${s.income_level || "Low"},${s.living_status || "N/A"},${s.priority_level}\n`;
       });
     } else if (type === "assistance") {
       csv = "Senior,Type,Description,Amount,Date,Status,Given By\n";
@@ -43,12 +44,13 @@ const Reports = () => {
         csv += `"${r.seniors?.first_name} ${r.seniors?.last_name}",${r.type},"${r.description}",${r.amount},${r.date_given},${r.status},"${r.given_by}"\n`;
       });
     } else if (type === "priority") {
-      csv = "Name,Age,Health Status,Income Level,Living Status,Priority Level,Score\n";
+      csv = "Name,Age,Illnesses,Income Level,Living Status,Priority Level,Score\n";
       const sorted = [...seniors]
         .map((s) => ({ ...s, result: computePriority(s), age: calculateAge(s.birth_date) }))
         .sort((a, b) => b.result.score - a.result.score);
       sorted.forEach((s) => {
-        csv += `"${s.first_name} ${s.last_name}",${s.age},${s.health_status},${s.income_level || "Low"},${s.living_status || "N/A"},${s.result.level},${s.result.score}\n`;
+        const illnesses = s.illnesses?.join("; ") || "None";
+        csv += `"${s.first_name} ${s.last_name}",${s.age},"${illnesses}",${s.income_level || "Low"},${s.living_status || "N/A"},${s.result.level},${s.result.score}\n`;
       });
     }
     const blob = new Blob([csv], { type: "text/csv" });
@@ -75,13 +77,13 @@ const Reports = () => {
       doc.text("Senior Citizens Report", 14, 32);
       autoTable(doc, {
         startY: 38,
-        head: [["Name", "Age", "Gender", "Address", "Health", "Income", "Living", "Priority"]],
+        head: [["Name", "Age", "Gender", "Address", "Illnesses", "Income", "Living", "Priority"]],
         body: seniors.map((s) => [
           `${s.first_name} ${s.last_name}`,
           calculateAge(s.birth_date),
           s.gender,
           s.address,
-          s.health_status,
+          s.illnesses?.join(", ") || "None",
           s.income_level || "Low",
           s.living_status || "N/A",
           s.priority_level || "Low",
@@ -115,15 +117,15 @@ const Reports = () => {
         .sort((a, b) => b.result.score - a.result.score);
       autoTable(doc, {
         startY: 38,
-        head: [["Name", "Age", "Health Status", "Income Level", "Living Status", "Priority", "Score"]],
+        head: [["Name", "Age", "Illnesses", "Income Level", "Living Status", "Priority", "Score"]],
         body: sorted.map((s) => [
           `${s.first_name} ${s.last_name}`,
           s.age,
-          s.health_status,
+          s.illnesses?.join(", ") || "None",
           s.income_level || "Low",
           s.living_status || "N/A",
           s.result.level,
-          `${s.result.score}/14`,
+          `${s.result.score}/15`,
         ]),
         styles: { fontSize: 8 },
         headStyles: { fillColor: [39, 95, 62] },
