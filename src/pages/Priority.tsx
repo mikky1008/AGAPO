@@ -54,7 +54,7 @@ const Priority = () => {
         <div>
           <h1 className="text-2xl font-serif text-foreground">Priority Assessment</h1>
           <p className="text-muted-foreground text-sm">
-            Automated prioritization based on health, income, living status, age, and illness history
+            Automated prioritization based on income, living status, age, and illness history
           </p>
         </div>
       </div>
@@ -76,12 +76,12 @@ const Priority = () => {
       <div className="bg-card rounded-xl border border-border p-4 text-sm text-muted-foreground">
         <p className="font-medium text-foreground mb-2">Scoring Criteria</p>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
-          <div><span className="font-medium text-foreground">Health:</span> Good (1) · Fair (2) · Poor (3)</div>
           <div><span className="font-medium text-foreground">Income:</span> Above Avg (1) · Avg (2) · Below Avg (3) · Low (4)</div>
           <div><span className="font-medium text-foreground">Living:</span> With Family/Caregiver (1) · Alone (2)</div>
           <div><span className="font-medium text-foreground">Age:</span> 60-69 (1) · 70-79 (2) · 80+ (3)</div>
-          <div><span className="font-medium text-foreground">Illnesses:</span> None (0) · 1 (1) · 2+ (2)</div>
-          <div><span className="font-medium text-foreground">Total:</span> 10-14 High · 7-9 Medium · ≤6 Low</div>
+          <div><span className="font-medium text-foreground">Illnesses:</span> None (0) · 1 (2) · 2 (4) · 3+ (6)</div>
+          <div><span className="font-medium text-foreground">Total:</span> ≥10 High · 6-9 Medium · ≤5 Low</div>
+          <div><span className="font-medium text-foreground">Health Status:</span> To be assessed by AI Agent</div>
         </div>
       </div>
 
@@ -100,12 +100,12 @@ const Priority = () => {
                     {a.senior.first_name} {a.senior.last_name}
                   </h3>
                   <p className="text-sm text-muted-foreground">
-                    Age {a.age} · {a.senior.health_status} health · {a.senior.income_level} income · {a.senior.living_status}
+                    Age {a.age} · {a.senior.illnesses?.length || 0} illness(es) · {a.senior.income_level} income · {a.senior.living_status}
                   </p>
                 </div>
               </div>
               <span className={`text-xs px-3 py-1 rounded-full font-medium whitespace-nowrap ${badgeStyle(a.level)}`}>
-                {a.level} Priority — Score: {a.score}/14
+                {a.level} Priority — Score: {a.score}/15
               </span>
             </div>
 
