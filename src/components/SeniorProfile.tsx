@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { MapPin, Phone, Heart, User, AlertTriangle, DollarSign, Home, Calendar } from "lucide-react";
+import { MapPin, Phone, User, AlertTriangle, DollarSign, Home, Calendar } from "lucide-react";
 
 function calculateAge(birthDate: string): number {
   const today = new Date();
@@ -22,7 +22,6 @@ interface SeniorProfileProps {
     address: string;
     contact_number: string | null;
     emergency_contact?: string | null;
-    health_status: string;
     illnesses: string[] | null;
     living_alone: boolean | null;
     living_status?: string;
@@ -80,10 +79,6 @@ const SeniorProfile = ({ senior }: SeniorProfileProps) => {
             <span>Emergency: {senior.emergency_contact}</span>
           </div>
         )}
-        <div className="flex items-center gap-2 text-muted-foreground">
-          <Heart className="w-4 h-4 shrink-0" />
-          <span>Health: {senior.health_status}</span>
-        </div>
         {senior.illnesses && senior.illnesses.length > 0 && (
           <div className="flex items-center gap-2 text-muted-foreground">
             <AlertTriangle className="w-4 h-4 shrink-0" />
