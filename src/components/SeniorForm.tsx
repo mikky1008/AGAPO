@@ -13,7 +13,6 @@ interface SeniorFormData {
   address: string;
   contactNumber: string;
   emergencyContact: string;
-  healthStatus: string;
   illnesses: string;
   livingStatus: string;
   incomeLevel: string;
@@ -34,7 +33,6 @@ const defaultForm: SeniorFormData = {
   address: "",
   contactNumber: "",
   emergencyContact: "",
-  healthStatus: "Good",
   illnesses: "",
   livingStatus: "With Family",
   incomeLevel: "Low",
@@ -144,19 +142,9 @@ const SeniorForm = ({ onSubmit, initialData, initialPhotoUrl, submitLabel = "Reg
         </div>
       </div>
       <div className="space-y-1.5">
-        <Label>Health Status</Label>
-        <Select value={form.healthStatus} onValueChange={(v) => setForm({ ...form, healthStatus: v })}>
-          <SelectTrigger><SelectValue /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="Good">Good</SelectItem>
-            <SelectItem value="Fair">Fair</SelectItem>
-            <SelectItem value="Poor">Poor</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-      <div className="space-y-1.5">
         <Label htmlFor="illnesses">Illnesses (comma-separated)</Label>
         <Input id="illnesses" placeholder="e.g. Hypertension, Diabetes" value={form.illnesses} onChange={(e) => setForm({ ...form, illnesses: e.target.value })} />
+        <p className="text-xs text-muted-foreground">Health status will be assessed by AI agent based on illnesses in a future update.</p>
       </div>
       <div className="space-y-1.5">
         <Label>Income Level</Label>
