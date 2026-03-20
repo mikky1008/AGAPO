@@ -44,7 +44,7 @@ const AppLayout = ({ children }: { children: ReactNode }) => {
         {/* Header */}
         <div className={`p-4 flex items-center ${collapsed ? "justify-center" : "gap-3 px-6"}`}>
           <div className="w-10 h-10 rounded-full bg-sidebar-primary flex items-center justify-center shrink-0">
-            <Heart className="w-5 h-5 text-sidebar-primary-foreground" />
+            <img src="/agapo-logo.png" className="w-10 h-10 rounded-full object-cover" />
           </div>
           {!collapsed && (
             <div>
