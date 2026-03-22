@@ -180,7 +180,7 @@ const Profile = () => {
   };
 
   return (
-    <div className="animate-fade-in space-y-0">
+    <div className="animate-fade-in -m-4 lg:-m-6">
       
 
         {/* Green gradient cover */}
