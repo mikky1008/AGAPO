@@ -180,8 +180,8 @@ const Profile = () => {
   };
 
   return (
-    <div className="animate-fade-in -m-4 lg:-m-6">
-      <div className="bg-card rounded-xl border border-border/50 shadow-md overflow-hidden">
+    <div className="animate-fade-in -m-4 lg:-m-6 min-h-screen">
+      <div className="bg-card rounded-xl border border-border/50 shadow-md overflow-hidden min-h-full">
 
         {/* Green gradient cover */}
         <div className="h-36 sm:h-44 w-full" style={{ background: "linear-gradient(135deg, #166534, #15803d, #4ade80)" }} />
