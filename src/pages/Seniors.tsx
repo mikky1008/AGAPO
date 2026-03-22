@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Search, Plus, Eye, Pencil, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import SeniorForm from "@/components/SeniorForm";
 import SeniorProfile from "@/components/SeniorProfile";
@@ -51,9 +52,7 @@ const Seniors = () => {
       if (error) throw error;
       if (photoFile && data) {
         const photoUrl = await uploadPhoto(photoFile, data.id);
-        if (photoUrl) {
-          await supabase.from("seniors").update({ photo: photoUrl }).eq("id", data.id);
-        }
+        if (photoUrl) await supabase.from("seniors").update({ photo: photoUrl }).eq("id", data.id);
       }
     },
     onSuccess: (_data, variables) => {
@@ -71,9 +70,7 @@ const Seniors = () => {
   const updateMutation = useMutation({
     mutationFn: async ({ id, data, photoFile }: { id: string; data: any; photoFile?: File | null }) => {
       let photoUrl = data.photo;
-      if (photoFile) {
-        photoUrl = await uploadPhoto(photoFile, id);
-      }
+      if (photoFile) photoUrl = await uploadPhoto(photoFile, id);
       const { error } = await supabase.from("seniors").update({ ...data, photo: photoUrl || data.photo }).eq("id", id);
       if (error) throw error;
     },
@@ -131,7 +128,6 @@ const Seniors = () => {
       address: formData.address,
       contact_number: formData.contactNumber,
       emergency_contact: formData.emergencyContact || null,
-      health_status: formData.healthStatus,
       illnesses: formData.illnesses ? formData.illnesses.split(",").map((s: string) => s.trim()) : [],
       living_alone: formData.livingStatus === "Living Alone",
       with_family: formData.livingStatus === "With Family",
@@ -139,7 +135,7 @@ const Seniors = () => {
       income_level: formData.incomeLevel,
     };
     const priority = computePriority(seniorData as any);
-    return { ...seniorData, priority_level: priority.level };
+    return { ...seniorData, priority_level: priority.level, priority_score: priority.score };
   };
 
   const handleAddSenior = (formData: any, photoFile?: File | null) => {
@@ -166,10 +162,9 @@ const Seniors = () => {
       address: editSenior.address,
       contactNumber: editSenior.contact_number || "",
       emergencyContact: editSenior.emergency_contact || "",
-      healthStatus: editSenior.health_status,
       illnesses: editSenior.illnesses?.join(", ") || "",
       livingStatus: editSenior.living_status || (editSenior.living_alone ? "Living Alone" : "With Family"),
-      incomeLevel: editSenior.income_level || "Low",
+      incomeLevel: editSenior.income_level || "0-10k",
     };
   };
 
@@ -196,7 +191,7 @@ const Seniors = () => {
         <Input placeholder="Search by name or address..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-10" />
       </div>
 
-      <div className="bg-card rounded-xl border border-border overflow-hidden">
+      <div className="bg-card rounded-xl border border-border shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
@@ -204,7 +199,7 @@ const Seniors = () => {
                 <th className="text-left p-3 text-xs font-medium text-muted-foreground uppercase">Name</th>
                 <th className="text-left p-3 text-xs font-medium text-muted-foreground uppercase">Age</th>
                 <th className="text-left p-3 text-xs font-medium text-muted-foreground uppercase hidden sm:table-cell">Address</th>
-                <th className="text-left p-3 text-xs font-medium text-muted-foreground uppercase">Health</th>
+                <th className="text-left p-3 text-xs font-medium text-muted-foreground uppercase">Illnesses</th>
                 <th className="text-left p-3 text-xs font-medium text-muted-foreground uppercase">Priority</th>
                 <th className="text-left p-3 text-xs font-medium text-muted-foreground uppercase">Actions</th>
               </tr>
@@ -212,14 +207,15 @@ const Seniors = () => {
             <tbody>
               {filtered.map((senior) => {
                 const currentAge = calculateAge(senior.birth_date);
+                const illnessCount = senior.illnesses?.length || 0;
                 return (
                   <tr key={senior.id} className="border-b border-border last:border-0 hover:bg-muted/30 transition-colors">
                     <td className="p-3 text-sm font-medium text-foreground">{senior.first_name} {senior.last_name}</td>
                     <td className="p-3 text-sm text-muted-foreground">{currentAge}</td>
                     <td className="p-3 text-sm text-muted-foreground hidden sm:table-cell">{senior.address}</td>
                     <td className="p-3">
-                      <span className={`text-xs px-2 py-0.5 rounded-full ${senior.health_status === "Good" ? "bg-primary/10 text-primary" : senior.health_status === "Fair" ? "bg-warning/10 text-warning" : "bg-destructive/10 text-priority-high"}`}>
-                        {senior.health_status}
+                      <span className={`text-xs px-2 py-0.5 rounded-full ${illnessCount === 0 ? "bg-primary/10 text-primary" : illnessCount === 1 ? "bg-warning/10 text-warning" : "bg-destructive/10 text-priority-high"}`}>
+                        {illnessCount === 0 ? "None" : `${illnessCount} illness${illnessCount > 1 ? "es" : ""}`}
                       </span>
                     </td>
                     <td className="p-3">
@@ -251,13 +247,15 @@ const Seniors = () => {
         </div>
       </div>
 
-      {/* View Profile Dialog */}
-      <Dialog open={!!viewSeniorId} onOpenChange={() => setViewSeniorId(null)}>
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader><DialogTitle className="font-serif">Senior Profile</DialogTitle></DialogHeader>
+      {/* Sliding Profile Panel */}
+      <Sheet open={!!viewSeniorId} onOpenChange={() => setViewSeniorId(null)}>
+        <SheetContent side="right" className="w-[420px] sm:w-[480px] overflow-y-auto">
+          <SheetHeader className="mb-4">
+            <SheetTitle className="font-serif">Senior Profile</SheetTitle>
+          </SheetHeader>
           {viewSenior && <SeniorProfile senior={viewSenior} />}
-        </DialogContent>
-      </Dialog>
+        </SheetContent>
+      </Sheet>
 
       {/* Edit Dialog */}
       <Dialog open={editOpen} onOpenChange={(open) => { setEditOpen(open); if (!open) setEditSenior(null); }}>
