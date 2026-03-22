@@ -17,7 +17,7 @@ const COMMON_ILLNESSES = [
   "Osteoporosis",
   "Kidney Disease",
   "Cancer",
-  "Dementia / Alzheimer's",
+  "Dementia",
   "Depression / Anxiety",
   "Tuberculosis",
   "Cataract / Glaucoma",
@@ -120,143 +120,161 @@ const SeniorForm = ({ onSubmit, initialData, initialPhotoUrl, submitLabel = "Reg
       })()
     : null;
 
+  const sectionLabel = (text: string) => (
+    <p className="text-xs font-semibold text-primary uppercase tracking-widest mb-2 pb-1 border-b border-primary/20">{text}</p>
+  );
+
   return (
-    <form onSubmit={handleSubmit} className="space-y-6 w-full">
+    <form onSubmit={handleSubmit} className="w-full">
+      <div className="grid grid-cols-2 gap-6">
 
-      {/* Photo + Basic Info Row */}
-      <div className="flex items-start gap-6">
-        {/* Photo */}
-        <div className="flex flex-col items-center gap-2 shrink-0">
-          <div
-            className="relative w-24 h-24 rounded-full border-2 border-muted bg-muted overflow-hidden flex items-center justify-center cursor-pointer group"
-            onClick={() => fileRef.current?.click()}
-          >
-            {photoPreview ? (
-              <img src={photoPreview} alt="photo" className="w-full h-full object-cover" />
-            ) : (
-              <User className="w-10 h-10 text-muted-foreground" />
-            )}
-            <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded-full">
-              <Camera className="w-5 h-5 text-white" />
+        {/* LEFT COLUMN */}
+        <div className="flex flex-col gap-5">
+
+          {/* Personal Information */}
+          <div>
+            {sectionLabel("Personal Information")}
+            <div className="flex items-center gap-3 mb-3">
+              <div
+                className="relative w-14 h-14 rounded-full border-2 border-muted bg-muted overflow-hidden flex items-center justify-center cursor-pointer group shrink-0"
+                onClick={() => fileRef.current?.click()}
+              >
+                {photoPreview ? (
+                  <img src={photoPreview} alt="photo" className="w-full h-full object-cover" />
+                ) : (
+                  <User className="w-6 h-6 text-muted-foreground" />
+                )}
+                <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded-full">
+                  <Camera className="w-4 h-4 text-white" />
+                </div>
+              </div>
+              <div>
+                <p className="text-sm font-medium text-foreground">Upload Photo</p>
+                <p className="text-xs text-muted-foreground">Click avatar to browse</p>
+              </div>
+              <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handlePhotoChange} />
+            </div>
+
+            <div className="grid grid-cols-2 gap-3 mb-3">
+              <div className="space-y-1">
+                <Label className="text-xs">First Name *</Label>
+                <Input required value={form.firstName} onChange={(e) => setForm({ ...form, firstName: e.target.value })} />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">Last Name *</Label>
+                <Input required value={form.lastName} onChange={(e) => setForm({ ...form, lastName: e.target.value })} />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <Label className="text-xs">Date of Birth *</Label>
+                <Input type="date" required value={form.birthDate} onChange={(e) => setForm({ ...form, birthDate: e.target.value })} />
+                {agePreview !== null && <p className="text-xs text-muted-foreground">Age: {agePreview} yrs old</p>}
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">Gender *</Label>
+                <Select value={form.gender} onValueChange={(v) => setForm({ ...form, gender: v })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Male">Male</SelectItem>
+                    <SelectItem value="Female">Female</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           </div>
-          <p className="text-xs text-muted-foreground text-center">Click to upload</p>
-          <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handlePhotoChange} />
-        </div>
 
-        {/* Name + Birth + Gender */}
-        <div className="flex-1 space-y-3">
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1.5">
-              <Label htmlFor="firstName">First Name</Label>
-              <Input id="firstName" required value={form.firstName} onChange={(e) => setForm({ ...form, firstName: e.target.value })} />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="lastName">Last Name</Label>
-              <Input id="lastName" required value={form.lastName} onChange={(e) => setForm({ ...form, lastName: e.target.value })} />
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1.5">
-              <Label htmlFor="birthDate">Date of Birth</Label>
-              <Input id="birthDate" type="date" required value={form.birthDate} onChange={(e) => setForm({ ...form, birthDate: e.target.value })} />
-              {agePreview !== null && (
-                <p className="text-xs text-muted-foreground">Age: {agePreview} years old</p>
-              )}
-            </div>
-            <div className="space-y-1.5">
-              <Label>Gender</Label>
-              <Select value={form.gender} onValueChange={(v) => setForm({ ...form, gender: v })}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Male">Male</SelectItem>
-                  <SelectItem value="Female">Female</SelectItem>
-                </SelectContent>
-              </Select>
+          {/* Contact & Location */}
+          <div>
+            {sectionLabel("Contact & Location")}
+            <div className="space-y-3">
+              <div className="space-y-1">
+                <Label className="text-xs">Address *</Label>
+                <Input required value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} placeholder="Purok, Barangay, Municipality" />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <Label className="text-xs">Contact Number</Label>
+                  <Input value={form.contactNumber} onChange={(e) => setForm({ ...form, contactNumber: e.target.value })} placeholder="09xxxxxxxxx" />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs">Emergency Contact</Label>
+                  <Input value={form.emergencyContact} onChange={(e) => setForm({ ...form, emergencyContact: e.target.value })} placeholder="Name & number" />
+                </div>
+              </div>
             </div>
           </div>
-        </div>
-      </div>
 
-      {/* Address */}
-      <div className="space-y-1.5">
-        <Label htmlFor="address">Address</Label>
-        <Input id="address" required value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} />
-      </div>
-
-      {/* Contact + Emergency */}
-      <div className="grid grid-cols-2 gap-3">
-        <div className="space-y-1.5">
-          <Label htmlFor="contactNumber">Contact Number</Label>
-          <Input id="contactNumber" value={form.contactNumber} onChange={(e) => setForm({ ...form, contactNumber: e.target.value })} />
-        </div>
-        <div className="space-y-1.5">
-          <Label htmlFor="emergencyContact">Emergency Contact</Label>
-          <Input id="emergencyContact" placeholder="Name & number" value={form.emergencyContact} onChange={(e) => setForm({ ...form, emergencyContact: e.target.value })} />
-        </div>
-      </div>
-
-      {/* Income + Living Status */}
-      <div className="grid grid-cols-2 gap-3">
-        <div className="space-y-1.5">
-          <Label>Monthly Income</Label>
-          <Select value={form.incomeLevel} onValueChange={(v) => setForm({ ...form, incomeLevel: v })}>
-            <SelectTrigger><SelectValue /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="0-10k">₱0 – ₱10,000</SelectItem>
-              <SelectItem value="11-30k">₱11,000 – ₱30,000</SelectItem>
-              <SelectItem value="31-50k">₱31,000 – ₱50,000</SelectItem>
-              <SelectItem value="51-70k">₱51,000 – ₱70,000</SelectItem>
-              <SelectItem value="71-90k">₱71,000 – ₱90,000</SelectItem>
-              <SelectItem value="91k+">₱91,000 and above</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="space-y-1.5">
-          <Label>Living Status</Label>
-          <Select value={form.livingStatus} onValueChange={(v) => setForm({ ...form, livingStatus: v })}>
-            <SelectTrigger><SelectValue /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="Living Alone">Living Alone</SelectItem>
-              <SelectItem value="With Family">With Family</SelectItem>
-              <SelectItem value="With Caregiver">With Caregiver</SelectItem>
-              <SelectItem value="Married">Married</SelectItem>
-              <SelectItem value="Widow">Widow</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
-
-      {/* Illnesses checkboxes */}
-      <div className="space-y-2">
-        <Label>Illnesses / Medical Conditions</Label>
-        <p className="text-xs text-muted-foreground">Health status will be assessed by AI agent based on illnesses in a future update.</p>
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 border border-border rounded-lg p-3 bg-muted/20">
-          {COMMON_ILLNESSES.map((illness) => (
-            <div key={illness} className="flex items-center gap-2">
-              <Checkbox
-                id={illness}
-                checked={selectedIllnesses.includes(illness)}
-                onCheckedChange={() => toggleIllness(illness)}
-              />
-              <label htmlFor={illness} className="text-sm text-foreground cursor-pointer leading-tight">
-                {illness}
-              </label>
+          {/* Socioeconomic Status */}
+          <div>
+            {sectionLabel("Socioeconomic Status")}
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <Label className="text-xs">Monthly Income</Label>
+                <Select value={form.incomeLevel} onValueChange={(v) => setForm({ ...form, incomeLevel: v })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="0-10k">₱0 – ₱10,000</SelectItem>
+                    <SelectItem value="11-30k">₱11,000 – ₱30,000</SelectItem>
+                    <SelectItem value="31-50k">₱31,000 – ₱50,000</SelectItem>
+                    <SelectItem value="51-70k">₱51,000 – ₱70,000</SelectItem>
+                    <SelectItem value="71-90k">₱71,000 – ₱90,000</SelectItem>
+                    <SelectItem value="91k+">₱91,000 and above</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">Living Status</Label>
+                <Select value={form.livingStatus} onValueChange={(v) => setForm({ ...form, livingStatus: v })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Living Alone">Living Alone</SelectItem>
+                    <SelectItem value="With Family">With Family</SelectItem>
+                    <SelectItem value="With Caregiver">With Caregiver</SelectItem>
+                    <SelectItem value="Married">Married</SelectItem>
+                    <SelectItem value="Widow">Widow</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
-          ))}
-        </div>
-        <div className="space-y-1.5">
-          <Label htmlFor="otherIllness">Other (comma-separated)</Label>
-          <Input
-            id="otherIllness"
-            placeholder="e.g. Lupus, Parkinson's"
-            value={otherIllness}
-            onChange={(e) => setOtherIllness(e.target.value)}
-          />
-        </div>
-      </div>
+          </div>
 
-      <Button type="submit" className="w-full">{submitLabel}</Button>
+        </div>
+
+        {/* RIGHT COLUMN */}
+        <div className="flex flex-col gap-3">
+          {sectionLabel("Medical Conditions")}
+          <p className="text-xs text-muted-foreground -mt-2">Select all that apply. Health status will be assessed by AI agent.</p>
+
+          <div className="grid grid-cols-2 gap-2 border border-border rounded-lg p-3 bg-muted/20 flex-1">
+            {COMMON_ILLNESSES.map((illness) => (
+              <div key={illness} className="flex items-center gap-2">
+                <Checkbox
+                  id={illness}
+                  checked={selectedIllnesses.includes(illness)}
+                  onCheckedChange={() => toggleIllness(illness)}
+                />
+                <label htmlFor={illness} className="text-xs text-foreground cursor-pointer leading-tight">
+                  {illness}
+                </label>
+              </div>
+            ))}
+          </div>
+
+          <div className="space-y-1">
+            <Label className="text-xs">Other conditions (comma-separated)</Label>
+            <Input
+              placeholder="e.g. Lupus, Parkinson's"
+              value={otherIllness}
+              onChange={(e) => setOtherIllness(e.target.value)}
+            />
+          </div>
+
+          <Button type="submit" className="w-full mt-auto">{submitLabel}</Button>
+        </div>
+
+      </div>
     </form>
   );
 };
