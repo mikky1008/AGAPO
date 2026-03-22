@@ -131,6 +131,7 @@ const Seniors = () => {
       address: formData.address,
       contact_number: formData.contactNumber,
       emergency_contact: formData.emergencyContact || null,
+      health_status: formData.healthStatus,
       illnesses: formData.illnesses ? formData.illnesses.split(",").map((s: string) => s.trim()) : [],
       living_alone: formData.livingStatus === "Living Alone",
       with_family: formData.livingStatus === "With Family",
@@ -138,7 +139,7 @@ const Seniors = () => {
       income_level: formData.incomeLevel,
     };
     const priority = computePriority(seniorData as any);
-    return { ...seniorData, priority_level: priority.level, priority_score: priority.score };
+    return { ...seniorData, priority_level: priority.level };
   };
 
   const handleAddSenior = (formData: any, photoFile?: File | null) => {
@@ -165,6 +166,7 @@ const Seniors = () => {
       address: editSenior.address,
       contactNumber: editSenior.contact_number || "",
       emergencyContact: editSenior.emergency_contact || "",
+      healthStatus: editSenior.health_status,
       illnesses: editSenior.illnesses?.join(", ") || "",
       livingStatus: editSenior.living_status || (editSenior.living_alone ? "Living Alone" : "With Family"),
       incomeLevel: editSenior.income_level || "Low",
@@ -182,7 +184,7 @@ const Seniors = () => {
           <DialogTrigger asChild>
             <Button><Plus className="w-4 h-4 mr-2" /> Add Senior</Button>
           </DialogTrigger>
-          <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+          <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
             <DialogHeader><DialogTitle className="font-serif">Register New Senior</DialogTitle></DialogHeader>
             <SeniorForm onSubmit={handleAddSenior} submitLabel="Register Senior" />
           </DialogContent>
@@ -202,7 +204,7 @@ const Seniors = () => {
                 <th className="text-left p-3 text-xs font-medium text-muted-foreground uppercase">Name</th>
                 <th className="text-left p-3 text-xs font-medium text-muted-foreground uppercase">Age</th>
                 <th className="text-left p-3 text-xs font-medium text-muted-foreground uppercase hidden sm:table-cell">Address</th>
-                <th className="text-left p-3 text-xs font-medium text-muted-foreground uppercase">Illnesses</th>
+                <th className="text-left p-3 text-xs font-medium text-muted-foreground uppercase">Health</th>
                 <th className="text-left p-3 text-xs font-medium text-muted-foreground uppercase">Priority</th>
                 <th className="text-left p-3 text-xs font-medium text-muted-foreground uppercase">Actions</th>
               </tr>
@@ -210,15 +212,14 @@ const Seniors = () => {
             <tbody>
               {filtered.map((senior) => {
                 const currentAge = calculateAge(senior.birth_date);
-                const illnessCount = senior.illnesses?.length || 0;
                 return (
                   <tr key={senior.id} className="border-b border-border last:border-0 hover:bg-muted/30 transition-colors">
                     <td className="p-3 text-sm font-medium text-foreground">{senior.first_name} {senior.last_name}</td>
                     <td className="p-3 text-sm text-muted-foreground">{currentAge}</td>
                     <td className="p-3 text-sm text-muted-foreground hidden sm:table-cell">{senior.address}</td>
                     <td className="p-3">
-                      <span className={`text-xs px-2 py-0.5 rounded-full ${illnessCount === 0 ? "bg-primary/10 text-primary" : illnessCount === 1 ? "bg-warning/10 text-warning" : "bg-destructive/10 text-priority-high"}`}>
-                        {illnessCount === 0 ? "None" : `${illnessCount} illness${illnessCount > 1 ? "es" : ""}`}
+                      <span className={`text-xs px-2 py-0.5 rounded-full ${senior.health_status === "Good" ? "bg-primary/10 text-primary" : senior.health_status === "Fair" ? "bg-warning/10 text-warning" : "bg-destructive/10 text-priority-high"}`}>
+                        {senior.health_status}
                       </span>
                     </td>
                     <td className="p-3">
@@ -250,15 +251,17 @@ const Seniors = () => {
         </div>
       </div>
 
+      {/* View Profile Dialog */}
       <Dialog open={!!viewSeniorId} onOpenChange={() => setViewSeniorId(null)}>
-        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader><DialogTitle className="font-serif">Senior Profile</DialogTitle></DialogHeader>
           {viewSenior && <SeniorProfile senior={viewSenior} />}
         </DialogContent>
       </Dialog>
 
+      {/* Edit Dialog */}
       <Dialog open={editOpen} onOpenChange={(open) => { setEditOpen(open); if (!open) setEditSenior(null); }}>
-        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader><DialogTitle className="font-serif">Edit Senior Record</DialogTitle></DialogHeader>
           {editSenior && (
             <SeniorForm
@@ -271,6 +274,7 @@ const Seniors = () => {
         </DialogContent>
       </Dialog>
 
+      {/* Delete Confirmation */}
       <AlertDialog open={!!deleteId} onOpenChange={(open) => { if (!open) setDeleteId(null); }}>
         <AlertDialogContent>
           <AlertDialogHeader>
