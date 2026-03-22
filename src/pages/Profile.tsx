@@ -180,8 +180,8 @@ const Profile = () => {
   };
 
   return (
-    <div className="animate-fade-in -m-4 lg:-m-6 min-h-screen">
-      <div className="bg-card rounded-xl border border-border/50 shadow-md overflow-hidden min-h-full">
+    <div className="animate-fade-in space-y-0">
+      
 
         {/* Green gradient cover */}
         <div className="h-36 sm:h-44 w-full" style={{ background: "linear-gradient(135deg, #166534, #15803d, #4ade80)" }} />
@@ -260,7 +260,6 @@ const Profile = () => {
             </div>
           </div>
         </div>
-      </div>
 
       {/* Edit Profile Dialog */}
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
