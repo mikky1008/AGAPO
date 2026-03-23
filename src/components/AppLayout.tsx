@@ -8,6 +8,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserRole } from "@/hooks/useUserRole";
 import NotificationBell from "@/components/NotificationBell";
+import ChatAgent from "@/components/ChatAgent";
 
 const allNavItems = [
   { to: "/dashboard", icon: LayoutDashboard, label: "Dashboard", adminOnly: false },
@@ -115,6 +116,9 @@ const AppLayout = ({ children }: { children: ReactNode }) => {
           <span className="text-sm text-muted-foreground capitalize ml-2">{isAdmin ? "Administrator" : "Barangay Staff"}</span>
         </header>
         <main className="flex-1 p-4 lg:p-6 overflow-auto">{children}</main>
+        {(location.pathname.startsWith("/seniors") || location.pathname.startsWith("/profile")) && (
+          <ChatAgent />
+        )}
       </div>
     </div>
   );
