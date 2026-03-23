@@ -116,9 +116,7 @@ const AppLayout = ({ children }: { children: ReactNode }) => {
           <span className="text-sm text-muted-foreground capitalize ml-2">{isAdmin ? "Administrator" : "Barangay Staff"}</span>
         </header>
         <main className="flex-1 p-4 lg:p-6 overflow-auto">{children}</main>
-        {(location.pathname.startsWith("/seniors") || location.pathname.startsWith("/profile")) && (
-          <ChatAgent />
-        )}
+        <ChatAgent />
       </div>
     </div>
   );
