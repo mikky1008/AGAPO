@@ -14,6 +14,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import SeniorForm from "@/components/SeniorForm";
 import SeniorProfile from "@/components/SeniorProfile";
+import ChatAgent from "@/components/ChatAgent";
 import { useToast } from "@/hooks/use-toast";
 
 const Seniors = () => {
