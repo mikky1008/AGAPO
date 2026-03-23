@@ -126,23 +126,25 @@ const SeniorForm = ({ onSubmit, initialData, initialPhotoUrl, submitLabel = "Reg
 
   return (
     <form onSubmit={handleSubmit} className="w-full">
-      <div className="grid grid-cols-2 gap-6">
+      {/* Responsive layout: single column (portrait) on mobile, two columns (landscape) on md+ screens */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
-        {/* LEFT COLUMN */}
+        {/* LEFT COLUMN — Personal Info, Contact, Socioeconomic */}
         <div className="flex flex-col gap-5">
 
           {/* Personal Information */}
           <div>
             {sectionLabel("Personal Information")}
+            {/* Photo upload: inline on mobile too, just smaller on compact screens */}
             <div className="flex items-center gap-3 mb-3">
               <div
-                className="relative w-14 h-14 rounded-full border-2 border-muted bg-muted overflow-hidden flex items-center justify-center cursor-pointer group shrink-0"
+                className="relative w-16 h-16 md:w-14 md:h-14 rounded-full border-2 border-muted bg-muted overflow-hidden flex items-center justify-center cursor-pointer group shrink-0"
                 onClick={() => fileRef.current?.click()}
               >
                 {photoPreview ? (
                   <img src={photoPreview} alt="photo" className="w-full h-full object-cover" />
                 ) : (
-                  <User className="w-6 h-6 text-muted-foreground" />
+                  <User className="w-7 h-7 md:w-6 md:h-6 text-muted-foreground" />
                 )}
                 <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded-full">
                   <Camera className="w-4 h-4 text-white" />
@@ -150,12 +152,13 @@ const SeniorForm = ({ onSubmit, initialData, initialPhotoUrl, submitLabel = "Reg
               </div>
               <div>
                 <p className="text-sm font-medium text-foreground">Upload Photo</p>
-                <p className="text-xs text-muted-foreground">Click avatar to browse</p>
+                <p className="text-xs text-muted-foreground">Tap avatar to browse</p>
               </div>
               <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handlePhotoChange} />
             </div>
 
-            <div className="grid grid-cols-2 gap-3 mb-3">
+            {/* Name fields: stacked on mobile, side-by-side on sm+ */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
               <div className="space-y-1">
                 <Label className="text-xs">First Name *</Label>
                 <Input required value={form.firstName} onChange={(e) => setForm({ ...form, firstName: e.target.value })} />
@@ -166,7 +169,8 @@ const SeniorForm = ({ onSubmit, initialData, initialPhotoUrl, submitLabel = "Reg
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            {/* DOB + Gender: stacked on mobile, side-by-side on sm+ */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1">
                 <Label className="text-xs">Date of Birth *</Label>
                 <Input type="date" required value={form.birthDate} onChange={(e) => setForm({ ...form, birthDate: e.target.value })} />
@@ -193,7 +197,8 @@ const SeniorForm = ({ onSubmit, initialData, initialPhotoUrl, submitLabel = "Reg
                 <Label className="text-xs">Address *</Label>
                 <Input required value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} placeholder="Purok, Barangay, Municipality" />
               </div>
-              <div className="grid grid-cols-2 gap-3">
+              {/* Contact fields: stacked on mobile, side-by-side on sm+ */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="space-y-1">
                   <Label className="text-xs">Contact Number</Label>
                   <Input value={form.contactNumber} onChange={(e) => setForm({ ...form, contactNumber: e.target.value })} placeholder="09xxxxxxxxx" />
@@ -209,7 +214,8 @@ const SeniorForm = ({ onSubmit, initialData, initialPhotoUrl, submitLabel = "Reg
           {/* Socioeconomic Status */}
           <div>
             {sectionLabel("Socioeconomic Status")}
-            <div className="grid grid-cols-2 gap-3">
+            {/* Income + Living status: stacked on mobile, side-by-side on sm+ */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1">
                 <Label className="text-xs">Monthly Income</Label>
                 <Select value={form.incomeLevel} onValueChange={(v) => setForm({ ...form, incomeLevel: v })}>
@@ -240,16 +246,22 @@ const SeniorForm = ({ onSubmit, initialData, initialPhotoUrl, submitLabel = "Reg
             </div>
           </div>
 
+          {/* Submit button shown here on mobile (below left column) */}
+          <div className="block md:hidden">
+            <Button type="submit" className="w-full">{submitLabel}</Button>
+          </div>
+
         </div>
 
-        {/* RIGHT COLUMN */}
+        {/* RIGHT COLUMN — Medical Conditions */}
         <div className="flex flex-col gap-3">
           {sectionLabel("Medical Conditions")}
           <p className="text-xs text-muted-foreground -mt-2">Select all that apply. Health status will be assessed by AI agent.</p>
 
-          <div className="grid grid-cols-2 gap-2 border border-border rounded-lg p-3 bg-muted/20 flex-1">
+          {/* Illness checkboxes: 1 col on mobile, 2 cols on sm+ */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 border border-border rounded-lg p-3 bg-muted/20 flex-1">
             {COMMON_ILLNESSES.map((illness) => (
-              <div key={illness} className="flex items-center gap-2">
+              <div key={illness} className="flex items-center gap-2 py-0.5">
                 <Checkbox
                   id={illness}
                   checked={selectedIllnesses.includes(illness)}
@@ -271,7 +283,8 @@ const SeniorForm = ({ onSubmit, initialData, initialPhotoUrl, submitLabel = "Reg
             />
           </div>
 
-          <Button type="submit" className="w-full mt-auto">{submitLabel}</Button>
+          {/* Submit button shown here on desktop (bottom of right column) */}
+          <Button type="submit" className="w-full mt-auto hidden md:flex">{submitLabel}</Button>
         </div>
 
       </div>
