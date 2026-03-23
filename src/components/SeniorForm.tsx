@@ -35,6 +35,7 @@ interface SeniorFormData {
   emergencyContact: string;
   illnesses: string;
   livingStatus: string;
+  maritalStatus: string;
   incomeLevel: string;
 }
 
@@ -55,6 +56,7 @@ const defaultForm: SeniorFormData = {
   emergencyContact: "",
   illnesses: "",
   livingStatus: "With Family",
+  maritalStatus: "Single",
   incomeLevel: "0-10k",
 };
 
@@ -214,7 +216,7 @@ const SeniorForm = ({ onSubmit, initialData, initialPhotoUrl, submitLabel = "Reg
           {/* Socioeconomic Status */}
           <div>
             {sectionLabel("Socioeconomic Status")}
-            {/* Income + Living status: stacked on mobile, side-by-side on sm+ */}
+            {/* Income + Living + Marital status: stacked on mobile, side-by-side on sm+ */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1">
                 <Label className="text-xs">Monthly Income</Label>
@@ -238,8 +240,20 @@ const SeniorForm = ({ onSubmit, initialData, initialPhotoUrl, submitLabel = "Reg
                     <SelectItem value="Living Alone">Living Alone</SelectItem>
                     <SelectItem value="With Family">With Family</SelectItem>
                     <SelectItem value="With Caregiver">With Caregiver</SelectItem>
+                    <SelectItem value="In a Care Facility">In a Care Facility</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1 sm:col-span-2">
+                <Label className="text-xs">Marital Status</Label>
+                <Select value={form.maritalStatus} onValueChange={(v) => setForm({ ...form, maritalStatus: v })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Single">Single</SelectItem>
                     <SelectItem value="Married">Married</SelectItem>
-                    <SelectItem value="Widow">Widow</SelectItem>
+                    <SelectItem value="Widowed">Widowed</SelectItem>
+                    <SelectItem value="Separated">Separated</SelectItem>
+                    <SelectItem value="Divorced">Divorced</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
