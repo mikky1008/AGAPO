@@ -173,15 +173,15 @@ const Seniors = () => {
     <div className="space-y-6 animate-fade-in">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-serif text-foreground">Senior Citizens</h1>
-          <p className="text-muted-foreground text-sm">{seniors.length} registered seniors</p>
+          <h1 className="page-title">Senior Citizens</h1>
+          <p className="page-subtitle">{seniors.length} registered seniors</p>
         </div>
         <Dialog open={addOpen} onOpenChange={setAddOpen}>
           <DialogTrigger asChild>
             <Button><Plus className="w-4 h-4 mr-2" /> Add Senior</Button>
           </DialogTrigger>
           <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader><DialogTitle className="font-serif">Register New Senior</DialogTitle></DialogHeader>
+            <DialogHeader><DialogTitle style={{ fontFamily: "Sora, sans-serif" }}>Register New Senior</DialogTitle></DialogHeader>
             <SeniorForm onSubmit={handleAddSenior} submitLabel="Register Senior" />
           </DialogContent>
         </Dialog>
@@ -192,7 +192,7 @@ const Seniors = () => {
         <Input placeholder="Search by name or address..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-10" />
       </div>
 
-      <div className="bg-card rounded-xl border border-border shadow-sm overflow-hidden">
+      <div className="glass-table">
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
@@ -252,7 +252,7 @@ const Seniors = () => {
       <Sheet open={!!viewSeniorId} onOpenChange={() => setViewSeniorId(null)}>
         <SheetContent side="right" className="w-[420px] sm:w-[480px] overflow-y-auto">
           <SheetHeader className="mb-4">
-            <SheetTitle className="font-serif">Senior Profile</SheetTitle>
+            <SheetTitle style={{ fontFamily: "Sora, sans-serif" }}>Senior Profile</SheetTitle>
           </SheetHeader>
           {viewSenior && <SeniorProfile senior={viewSenior} />}
         </SheetContent>
@@ -261,7 +261,7 @@ const Seniors = () => {
       {/* Edit Dialog */}
       <Dialog open={editOpen} onOpenChange={(open) => { setEditOpen(open); if (!open) setEditSenior(null); }}>
         <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader><DialogTitle className="font-serif">Edit Senior Record</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle style={{ fontFamily: "Sora, sans-serif" }}>Edit Senior Record</DialogTitle></DialogHeader>
           {editSenior && (
             <SeniorForm
               onSubmit={handleEditSenior}
