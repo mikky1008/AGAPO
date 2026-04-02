@@ -20,56 +20,32 @@ const allNavItems = [
   { to: "/profile", icon: User, label: "Profile" },
 ];
 
-/** Subtle senior-care SVG scene — semi-transparent, placed in page background */
 const BackgroundArt = () => (
   <svg
-    className="pointer-events-none select-none fixed bottom-0 right-0 opacity-[0.055] z-0"
-    width="520" height="420" viewBox="0 0 520 420" fill="none"
-    xmlns="http://www.w3.org/2000/svg"
-    aria-hidden="true"
+    className="pointer-events-none select-none fixed bottom-0 right-0 z-0"
+    width="480" height="380" viewBox="0 0 480 380" fill="none"
+    xmlns="http://www.w3.org/2000/svg" aria-hidden="true"
+    style={{ opacity: 0.045 }}
   >
-    {/* Elderly figure with walking cane */}
-    <ellipse cx="130" cy="360" rx="42" ry="14" fill="hsl(158,55%,35%)" opacity="0.5"/>
-    {/* body */}
-    <rect x="112" y="270" width="36" height="80" rx="18" fill="hsl(158,55%,35%)"/>
-    {/* head */}
-    <circle cx="130" cy="252" r="22" fill="hsl(158,55%,35%)"/>
-    {/* cane */}
-    <line x1="155" y1="345" x2="175" y2="370" stroke="hsl(158,55%,35%)" strokeWidth="5" strokeLinecap="round"/>
-    <line x1="175" y1="370" x2="185" y2="370" stroke="hsl(158,55%,35%)" strokeWidth="5" strokeLinecap="round"/>
-    {/* arms */}
-    <path d="M112 295 Q88 315 80 335" stroke="hsl(158,55%,35%)" strokeWidth="8" strokeLinecap="round" fill="none"/>
-    <path d="M148 295 Q168 310 158 340" stroke="hsl(158,55%,35%)" strokeWidth="8" strokeLinecap="round" fill="none"/>
-
-    {/* Heart / care symbol */}
-    <path d="M280 180 C280 170, 265 160, 258 172 C251 160, 236 170, 236 180 C236 195 258 210 258 210 C258 210 280 195 280 180 Z"
-      fill="hsl(145,65%,42%)" opacity="0.7"/>
-
-    {/* Caregiver / helper figure */}
-    <ellipse cx="350" cy="360" rx="46" ry="14" fill="hsl(152,55%,38%)" opacity="0.5"/>
-    <rect x="330" y="265" width="40" height="88" rx="20" fill="hsl(152,55%,38%)"/>
-    <circle cx="350" cy="246" r="24" fill="hsl(152,55%,38%)"/>
-    {/* arms outstretched — welcoming */}
-    <path d="M330 292 Q300 275 285 285" stroke="hsl(152,55%,38%)" strokeWidth="9" strokeLinecap="round" fill="none"/>
-    <path d="M370 292 Q400 275 415 285" stroke="hsl(152,55%,38%)" strokeWidth="9" strokeLinecap="round" fill="none"/>
-
-    {/* Connecting line — helping hand */}
-    <path d="M168 330 Q210 280 280 310" stroke="hsl(145,65%,42%)" strokeWidth="3" strokeDasharray="8 6" strokeLinecap="round" opacity="0.6"/>
-
-    {/* Small leaf / wellness icons */}
-    <path d="M430 120 C430 100 450 90 465 105 C450 105 445 120 430 120 Z" fill="hsl(158,64%,38%)" opacity="0.8"/>
-    <path d="M445 120 L448 140" stroke="hsl(158,64%,38%)" strokeWidth="3" strokeLinecap="round" opacity="0.8"/>
-
-    <path d="M60 150 C60 130 80 120 95 135 C80 135 75 150 60 150 Z" fill="hsl(145,72%,44%)" opacity="0.6"/>
-    <path d="M75 150 L78 170" stroke="hsl(145,72%,44%)" strokeWidth="3" strokeLinecap="round" opacity="0.6"/>
-
-    {/* Star/sparkle accents */}
-    <circle cx="200" cy="100" r="4" fill="hsl(158,64%,38%)" opacity="0.5"/>
-    <circle cx="480" cy="200" r="3" fill="hsl(145,72%,44%)" opacity="0.4"/>
-    <circle cx="310" cy="60" r="5" fill="hsl(172,60%,40%)" opacity="0.45"/>
-
-    {/* Large faint circle frame */}
-    <circle cx="350" cy="310" r="180" stroke="hsl(158,64%,38%)" strokeWidth="1.5" fill="none" opacity="0.25" strokeDasharray="12 8"/>
+    <ellipse cx="120" cy="335" rx="38" ry="12" fill="hsl(158,55%,32%)"/>
+    <rect x="104" y="252" width="32" height="74" rx="16" fill="hsl(158,55%,32%)"/>
+    <circle cx="120" cy="236" r="20" fill="hsl(158,55%,32%)"/>
+    <line x1="136" y1="320" x2="154" y2="342" stroke="hsl(158,55%,32%)" strokeWidth="5" strokeLinecap="round"/>
+    <line x1="154" y1="342" x2="163" y2="342" stroke="hsl(158,55%,32%)" strokeWidth="5" strokeLinecap="round"/>
+    <path d="M104 272 Q82 290 76 310" stroke="hsl(158,55%,32%)" strokeWidth="7" strokeLinecap="round" fill="none"/>
+    <path d="M136 272 Q154 286 148 314" stroke="hsl(158,55%,32%)" strokeWidth="7" strokeLinecap="round" fill="none"/>
+    <path d="M268 168 C268 159 255 151 249 162 C243 151 230 159 230 168 C230 181 249 194 249 194 C249 194 268 181 268 168Z" fill="hsl(145,60%,38%)"/>
+    <rect x="308" y="248" width="36" height="82" rx="18" fill="hsl(152,52%,35%)"/>
+    <circle cx="326" cy="232" r="22" fill="hsl(152,52%,35%)"/>
+    <path d="M308 270 Q280 254 266 264" stroke="hsl(152,52%,35%)" strokeWidth="8" strokeLinecap="round" fill="none"/>
+    <path d="M344 270 Q372 254 386 264" stroke="hsl(152,52%,35%)" strokeWidth="8" strokeLinecap="round" fill="none"/>
+    <path d="M158 306 Q200 260 258 288" stroke="hsl(145,60%,38%)" strokeWidth="2.5" strokeDasharray="7 5" strokeLinecap="round"/>
+    <path d="M400 110 C400 93 418 84 431 97 C418 97 414 110 400 110Z" fill="hsl(158,60%,36%)"/>
+    <line x1="412" y1="110" x2="415" y2="128" stroke="hsl(158,60%,36%)" strokeWidth="2.5" strokeLinecap="round"/>
+    <circle cx="185" cy="92" r="4" fill="hsl(158,60%,36%)"/>
+    <circle cx="448" cy="185" r="3" fill="hsl(145,65%,40%)"/>
+    <circle cx="290" cy="54" r="5" fill="hsl(172,56%,38%)"/>
+    <circle cx="326" cy="232" r="180" stroke="hsl(158,55%,32%)" strokeWidth="1.2" fill="none" strokeDasharray="10 7"/>
   </svg>
 );
 
@@ -81,36 +57,35 @@ const AppLayout = ({ children }: { children: ReactNode }) => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
 
-  const handleLogout = async () => {
-    await signOut();
-    navigate("/");
-  };
+  const handleLogout = async () => { await signOut(); navigate("/"); };
 
   return (
     <div className="min-h-screen flex bg-background relative overflow-hidden">
       <BackgroundArt />
 
       {mobileOpen && (
-        <div className="fixed inset-0 bg-foreground/20 backdrop-blur-sm z-30 lg:hidden"
+        <div className="fixed inset-0 bg-black/30 backdrop-blur-sm z-30 lg:hidden"
           onClick={() => setMobileOpen(false)} />
       )}
 
-      {/* Sidebar */}
+      {/* Sidebar — very dark forest green */}
       <aside className={`fixed lg:static inset-y-0 left-0 z-40 sidebar-glass flex flex-col transition-all duration-300
         ${collapsed ? "w-16" : "w-64"}
         ${mobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}`}>
 
         {/* Logo */}
-        <div className={`flex items-center border-b border-white/10 shrink-0
+        <div className={`flex items-center border-b border-white/8 shrink-0
           ${collapsed ? "justify-center p-4" : "gap-3 px-5 py-5"}`}>
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[hsl(145_72%_58%)] to-[hsl(158_64%_42%)] flex items-center justify-center shrink-0 shadow-[0_4px_12px_hsl(145_72%_38%/0.45)]">
+          <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
+            style={{ background: "linear-gradient(135deg, hsl(145 70% 48%), hsl(158 64% 35%))", boxShadow: "0 4px 12px hsl(145 70% 20% / 0.50)" }}>
             <img src="/favicon.ico" className="w-9 h-9 rounded-xl object-cover" />
           </div>
           {!collapsed && (
             <div>
-              <h1 className="text-base font-bold text-sidebar-foreground tracking-wide"
-                style={{ fontFamily: "Sora, sans-serif" }}>AGAPO</h1>
-              <p className="text-[10px] text-sidebar-foreground/50 font-semibold tracking-widest uppercase">
+              <h1 className="text-[15px] font-bold tracking-wide"
+                style={{ fontFamily: "Sora, sans-serif", color: "hsl(150 20% 92%)" }}>AGAPO</h1>
+              <p className="text-[10px] font-semibold tracking-widest uppercase"
+                style={{ color: "hsl(150 15% 55%)", fontFamily: "Plus Jakarta Sans, sans-serif" }}>
                 Brgy. San Francisco
               </p>
             </div>
@@ -126,11 +101,15 @@ const AppLayout = ({ children }: { children: ReactNode }) => {
                 className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200
                   ${collapsed ? "justify-center" : ""}
                   ${isActive
-                    ? "bg-gradient-to-r from-[hsl(145_72%_58%/0.22)] to-[hsl(158_64%_50%/0.14)] text-sidebar-primary border border-sidebar-primary/28 shadow-[0_2px_8px_hsl(145_72%_38%/0.18)]"
-                    : "text-sidebar-foreground/62 hover:text-sidebar-foreground hover:bg-white/8"
-                  }`}>
-                <item.icon className={`w-4 h-4 shrink-0 ${isActive ? "text-sidebar-primary" : ""}`} />
-                {!collapsed && <span>{item.label}</span>}
+                    ? "text-[hsl(145,70%,55%)] border border-[hsl(145,70%,55%)/25%]"
+                    : "text-[hsl(150,15%,62%)] hover:text-[hsl(150,20%,88%)] hover:bg-white/6"
+                  }`}
+                style={isActive ? {
+                  background: "linear-gradient(90deg, hsl(145 70% 55% / 0.16), hsl(158 64% 45% / 0.08))",
+                  boxShadow: "0 2px 8px hsl(145 70% 30% / 0.18)"
+                } : {}}>
+                <item.icon className="w-4 h-4 shrink-0" style={isActive ? { color: "hsl(145,70%,58%)" } : {}} />
+                {!collapsed && <span style={{ fontFamily: "Plus Jakarta Sans, sans-serif" }}>{item.label}</span>}
               </Link>
             );
             if (collapsed) return (
@@ -144,21 +123,23 @@ const AppLayout = ({ children }: { children: ReactNode }) => {
         </nav>
 
         {/* Footer */}
-        <div className="p-2.5 border-t border-white/10 space-y-1 shrink-0">
+        <div className="p-2.5 border-t border-white/8 space-y-1 shrink-0">
           {!collapsed && (
             <div className="px-3 py-2">
-              <p className="text-[11px] font-medium text-sidebar-foreground/42 truncate"
-                style={{ fontFamily: "Plus Jakarta Sans, sans-serif" }}>{user?.email}</p>
-              <p className="text-[11px] font-bold text-sidebar-primary capitalize tracking-wide"
-                style={{ fontFamily: "Sora, sans-serif" }}>{role}</p>
+              <p className="text-[11px] font-medium truncate"
+                style={{ color: "hsl(150 12% 48%)", fontFamily: "Plus Jakarta Sans, sans-serif" }}>{user?.email}</p>
+              <p className="text-[11px] font-bold capitalize tracking-wide"
+                style={{ color: "hsl(145,70%,55%)", fontFamily: "Sora, sans-serif" }}>{role}</p>
             </div>
           )}
           <Tooltip delayDuration={0}>
             <TooltipTrigger asChild>
               <button onClick={handleLogout}
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-sidebar-foreground/58 hover:text-sidebar-foreground hover:bg-red-500/14 w-full transition-all duration-200
+                className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium w-full transition-all duration-200
                   ${collapsed ? "justify-center" : ""}`}
-                style={{ fontFamily: "Plus Jakarta Sans, sans-serif" }}>
+                style={{ color: "hsl(150 15% 55%)", fontFamily: "Plus Jakarta Sans, sans-serif" }}
+                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = "hsl(0 72% 65%)"; (e.currentTarget as HTMLElement).style.background = "hsl(0 72% 51% / 0.12)"; }}
+                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = "hsl(150 15% 55%)"; (e.currentTarget as HTMLElement).style.background = "transparent"; }}>
                 <LogOut className="w-4 h-4 shrink-0" />
                 {!collapsed && "Sign Out"}
               </button>
@@ -166,22 +147,23 @@ const AppLayout = ({ children }: { children: ReactNode }) => {
             {collapsed && <TooltipContent side="right">Sign Out</TooltipContent>}
           </Tooltip>
           <button onClick={() => setCollapsed(!collapsed)}
-            className="hidden lg:flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-sidebar-foreground/48 hover:text-sidebar-foreground hover:bg-white/8 w-full transition-all duration-200 justify-center">
+            className="hidden lg:flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm w-full transition-all duration-200 justify-center hover:bg-white/6"
+            style={{ color: "hsl(150 12% 46%)" }}>
             {collapsed ? <PanelLeft className="w-4 h-4" /> : <PanelLeftClose className="w-4 h-4" />}
           </button>
         </div>
       </aside>
 
-      {/* Main */}
+      {/* Main content */}
       <div className="flex-1 flex flex-col min-h-screen relative z-10">
         {/* Topbar */}
-        <header className="h-14 border-b border-white/52 flex items-center px-4 lg:px-6 bg-white/62 backdrop-blur-xl shadow-[0_1px_12px_hsl(0_0%_0%/0.05)] sticky top-0 z-20">
+        <header className="h-14 flex items-center px-4 lg:px-6 sticky top-0 z-20 topbar-glass">
           <Button variant="ghost" size="icon" className="lg:hidden mr-2" onClick={() => setMobileOpen(true)}>
             <Menu className="w-5 h-5" />
           </Button>
           <div className="flex-1" />
           <NotificationBell />
-          <span className="text-xs font-bold text-muted-foreground/65 capitalize ml-3 tracking-widest uppercase"
+          <span className="text-xs font-bold text-muted-foreground capitalize ml-3 tracking-widest uppercase"
             style={{ fontFamily: "Plus Jakarta Sans, sans-serif" }}>
             {isAdmin ? "Administrator" : "Barangay Staff"}
           </span>
