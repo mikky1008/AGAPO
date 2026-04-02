@@ -52,7 +52,7 @@ const Priority = () => {
           <ShieldAlert className="w-5 h-5 text-secondary" />
         </div>
         <div>
-          <h1 className="text-2xl font-serif text-foreground">Priority Assessment</h1>
+          <h1 className="page-title">Priority Assessment</h1>
           <p className="text-muted-foreground text-sm">
             Automated prioritization based on income, living status, age, and illness history
           </p>
