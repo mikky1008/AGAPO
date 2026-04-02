@@ -209,13 +209,13 @@ const Assistance = () => {
     <div className="space-y-6 animate-fade-in">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-serif text-foreground">Assistance Records</h1>
-          <p className="text-muted-foreground text-sm">{records.length} total records</p>
+          <h1 className="page-title">Assistance Records</h1>
+          <p className="page-subtitle">{records.length} total records</p>
         </div>
         <Dialog open={addOpen} onOpenChange={(open) => { setAddOpen(open); if (!open) setForm(emptyForm); }}>
           <DialogTrigger asChild><Button><Plus className="w-4 h-4 mr-2" /> Add Record</Button></DialogTrigger>
           <DialogContent>
-            <DialogHeader><DialogTitle className="font-serif">New Assistance Record</DialogTitle></DialogHeader>
+            <DialogHeader><DialogTitle style={{ fontFamily: "Sora, sans-serif" }}>New Assistance Record</DialogTitle></DialogHeader>
             <form onSubmit={(e) => { e.preventDefault(); addMutation.mutate(); }} className="space-y-4">
               {renderFormFields()}
               <Button type="submit" className="w-full" disabled={addMutation.isPending}>
@@ -231,7 +231,7 @@ const Assistance = () => {
         <Input placeholder="Search records..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-10" />
       </div>
 
-      <div className="bg-card rounded-xl border border-border overflow-hidden">
+      <div className="glass-table">
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
@@ -283,7 +283,7 @@ const Assistance = () => {
       {/* Edit Dialog */}
       <Dialog open={editOpen} onOpenChange={(open) => { setEditOpen(open); if (!open) { setEditRecord(null); setForm(emptyForm); } }}>
         <DialogContent>
-          <DialogHeader><DialogTitle className="font-serif">Edit Assistance Record</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle style={{ fontFamily: "Sora, sans-serif" }}>Edit Assistance Record</DialogTitle></DialogHeader>
           <form onSubmit={(e) => { e.preventDefault(); updateMutation.mutate(); }} className="space-y-4">
             {renderFormFields()}
             <Button type="submit" className="w-full" disabled={updateMutation.isPending}>
