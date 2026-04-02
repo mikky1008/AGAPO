@@ -177,15 +177,15 @@ const Reports = () => {
   return (
     <div className="space-y-6 animate-fade-in">
       <div>
-        <h1 className="text-2xl font-serif text-foreground">Reports</h1>
-        <p className="text-muted-foreground text-sm">Generate and download reports</p>
+        <h1 className="page-title">Reports</h1>
+        <p className="page-subtitle">Generate and download reports</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="stat-card space-y-4">
           <div className="flex items-center gap-3">
             <FileText className="w-5 h-5 text-primary" />
-            <h2 className="text-lg font-serif text-foreground">Senior Citizens Report</h2>
+            <h2 className="text-base font-semibold text-foreground" style={{ fontFamily: "Sora, sans-serif" }}>Senior Citizens Report</h2>
           </div>
           <div className="space-y-2 text-sm">
             <p className="text-muted-foreground">Total Registered: <span className="font-semibold text-foreground">{seniors.length}</span></p>
@@ -199,7 +199,7 @@ const Reports = () => {
         <div className="stat-card space-y-4">
           <div className="flex items-center gap-3">
             <FileText className="w-5 h-5 text-secondary" />
-            <h2 className="text-lg font-serif text-foreground">Assistance Report</h2>
+            <h2 className="text-base font-semibold text-foreground" style={{ fontFamily: "Sora, sans-serif" }}>Assistance Report</h2>
           </div>
           <div className="space-y-2 text-sm">
             <p className="text-muted-foreground">Total Records: <span className="font-semibold text-foreground">{records.length}</span></p>
@@ -214,7 +214,7 @@ const Reports = () => {
         <div className="stat-card space-y-4">
           <div className="flex items-center gap-3">
             <AlertTriangle className="w-5 h-5 text-priority-high" />
-            <h2 className="text-lg font-serif text-foreground">Priority List Report</h2>
+            <h2 className="text-base font-semibold text-foreground" style={{ fontFamily: "Sora, sans-serif" }}>Priority List Report</h2>
           </div>
           <div className="space-y-2 text-sm">
             <p className="text-muted-foreground">High Priority: <span className="font-semibold text-foreground">{priorityCounts.High}</span></p>
