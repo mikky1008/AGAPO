@@ -184,7 +184,7 @@ const Profile = () => {
       
 
         {/* Green gradient cover */}
-        <div className="h-36 sm:h-44 w-full" style={{ background: "linear-gradient(135deg, #166534, #15803d, #4ade80)" }} />
+        <div className="h-36 sm:h-44 w-full" style={{ background: "linear-gradient(135deg, hsl(162,45%,18%), hsl(158,64%,30%), hsl(145,72%,52%))" }} />
 
         {/* Avatar + Info */}
         <div className="px-6 lg:px-10 pb-10">
@@ -265,7 +265,7 @@ const Profile = () => {
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
         <DialogContent className="max-w-sm">
           <DialogHeader>
-            <DialogTitle className="font-serif">Edit Profile</DialogTitle>
+            <DialogTitle style={{ fontFamily: "Sora, sans-serif" }}>Edit Profile</DialogTitle>
           </DialogHeader>
           <div className="space-y-5 pt-1">
             <div className="flex flex-col items-center gap-3">
@@ -303,7 +303,7 @@ const Profile = () => {
       <Dialog open={settingsOpen} onOpenChange={setSettingsOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle className="font-serif">Settings</DialogTitle>
+            <DialogTitle style={{ fontFamily: "Sora, sans-serif" }}>Settings</DialogTitle>
           </DialogHeader>
           <div className="flex gap-1 border-b border-border pb-2 mt-1">
             {(["account", "password", "notifications", "policies"] as const).map((tab) => (
