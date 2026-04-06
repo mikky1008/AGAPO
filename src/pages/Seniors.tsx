@@ -7,7 +7,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useUserRole } from "@/hooks/useUserRole";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, Plus, Eye, Pencil, Trash2 } from "lucide-react";
+import { Search, Plus, Eye, Pencil, Trash2, RotateCcw } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
@@ -24,15 +24,21 @@ const Seniors = () => {
   const [viewSeniorId, setViewSeniorId] = useState<string | null>(null);
   const [editSenior, setEditSenior] = useState<any>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [showDeleted, setShowDeleted] = useState(false);
   const queryClient = useQueryClient();
   const { user } = useAuth();
   const { isAdmin } = useUserRole();
   const { toast } = useToast();
 
   const { data: seniors = [] } = useQuery({
-    queryKey: ["seniors"],
+    queryKey: ["seniors", showDeleted],
     queryFn: async () => {
-      const { data, error } = await supabase.from("seniors").select("*").order("created_at", { ascending: false });
+      let q = supabase.from("seniors").select("*").order("created_at", { ascending: false });
+      // RLS already filters deleted rows for non-admins; admins use showDeleted toggle
+      if (isAdmin && showDeleted) {
+        q = supabase.from("seniors").select("*").not("deleted_at", "is", null).order("created_at", { ascending: false });
+      }
+      const { data, error } = await q;
       if (error) throw error;
       return data;
     },
@@ -63,9 +69,7 @@ const Seniors = () => {
       const name = `${variables.payload.first_name} ${variables.payload.last_name}`;
       sendNotificationEmail("new_senior", `New senior ${name} has been registered.`, "New Senior Registered");
     },
-    onError: (error: any) => {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
-    },
+    onError: (error: any) => toast({ title: "Error", description: error.message, variant: "destructive" }),
   });
 
   const updateMutation = useMutation({
@@ -81,24 +85,34 @@ const Seniors = () => {
       setEditSenior(null);
       toast({ title: "Senior Updated", description: "Record has been updated successfully." });
     },
-    onError: (error: any) => {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
-    },
+    onError: (error: any) => toast({ title: "Error", description: error.message, variant: "destructive" }),
   });
 
+  // Soft delete via RPC
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from("seniors").delete().eq("id", id);
+      const { error } = await supabase.rpc("soft_delete_senior", { _senior_id: id });
       if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["seniors"] });
       setDeleteId(null);
-      toast({ title: "Senior Deleted", description: "Record has been removed." });
+      toast({ title: "Senior Archived", description: "Record has been soft-deleted and can be restored by an admin." });
     },
-    onError: (error: any) => {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
+    onError: (error: any) => toast({ title: "Error", description: error.message, variant: "destructive" }),
+  });
+
+  // Restore (admin only)
+  const restoreMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.rpc("restore_senior", { _senior_id: id });
+      if (error) throw error;
     },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["seniors"] });
+      toast({ title: "Senior Restored", description: "Record has been restored successfully." });
+    },
+    onError: (error: any) => toast({ title: "Error", description: error.message, variant: "destructive" }),
   });
 
   const filtered = seniors.filter(
@@ -113,8 +127,7 @@ const Seniors = () => {
     switch (level) {
       case "High": return "bg-destructive/10 text-priority-high border-0";
       case "Medium": return "bg-warning/10 text-warning border-0";
-      case "Low": return "bg-primary/10 text-primary border-0";
-      default: return "";
+      default: return "bg-primary/10 text-primary border-0";
     }
   };
 
@@ -148,10 +161,7 @@ const Seniors = () => {
     updateMutation.mutate({ id: editSenior.id, data: buildSeniorPayload(formData), photoFile });
   };
 
-  const openEdit = (senior: any) => {
-    setEditSenior(senior);
-    setEditOpen(true);
-  };
+  const openEdit = (senior: any) => { setEditSenior(senior); setEditOpen(true); };
 
   const getEditInitialData = () => {
     if (!editSenior) return undefined;
@@ -165,7 +175,7 @@ const Seniors = () => {
       emergencyContact: editSenior.emergency_contact || "",
       illnesses: editSenior.illnesses?.join(", ") || "",
       livingStatus: editSenior.living_status || (editSenior.living_alone ? "Living Alone" : "With Family"),
-      incomeLevel: editSenior.income_level || "0-10k",
+      incomeLevel: editSenior.income_level || "Low",
     };
   };
 
@@ -174,23 +184,44 @@ const Seniors = () => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="page-title">Senior Citizens</h1>
-          <p className="page-subtitle">{seniors.length} registered seniors</p>
+          <p className="page-subtitle">{seniors.length} {showDeleted ? "archived" : "registered"} seniors</p>
         </div>
-        <Dialog open={addOpen} onOpenChange={setAddOpen}>
-          <DialogTrigger asChild>
-            <Button><Plus className="w-4 h-4 mr-2" /> Add Senior</Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader><DialogTitle style={{ fontFamily: "Sora, sans-serif" }}>Register New Senior</DialogTitle></DialogHeader>
-            <SeniorForm onSubmit={handleAddSenior} submitLabel="Register Senior" />
-          </DialogContent>
-        </Dialog>
+        <div className="flex items-center gap-2">
+          {isAdmin && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowDeleted(!showDeleted)}
+              className={showDeleted ? "border-destructive text-destructive" : ""}
+            >
+              <Trash2 className="w-3.5 h-3.5 mr-1.5" />
+              {showDeleted ? "View Active" : "View Archived"}
+            </Button>
+          )}
+          {!showDeleted && (
+            <Dialog open={addOpen} onOpenChange={setAddOpen}>
+              <DialogTrigger asChild>
+                <Button><Plus className="w-4 h-4 mr-2" /> Add Senior</Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+                <DialogHeader><DialogTitle style={{ fontFamily: "Sora, sans-serif" }}>Register New Senior</DialogTitle></DialogHeader>
+                <SeniorForm onSubmit={handleAddSenior} submitLabel="Register Senior" />
+              </DialogContent>
+            </Dialog>
+          )}
+        </div>
       </div>
 
       <div className="relative max-w-md">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
         <Input placeholder="Search by name or address..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-10" />
       </div>
+
+      {showDeleted && isAdmin && (
+        <div className="rounded-xl border border-destructive/30 bg-destructive/5 px-4 py-2.5 text-sm text-destructive">
+          Showing archived (soft-deleted) records. These are hidden from staff.
+        </div>
+      )}
 
       <div className="glass-table">
         <div className="overflow-x-auto">
@@ -209,8 +240,9 @@ const Seniors = () => {
               {filtered.map((senior) => {
                 const currentAge = calculateAge(senior.birth_date);
                 const illnessCount = senior.illnesses?.length || 0;
+                const isArchived = !!senior.deleted_at;
                 return (
-                  <tr key={senior.id} className="border-b border-border last:border-0 hover:bg-muted/30 transition-colors">
+                  <tr key={senior.id} className={`border-b border-border last:border-0 transition-colors ${isArchived ? "opacity-60" : "hover:bg-muted/30"}`}>
                     <td className="p-3 text-sm font-medium text-foreground">{senior.first_name} {senior.last_name}</td>
                     <td className="p-3 text-sm text-muted-foreground">{currentAge}</td>
                     <td className="p-3 text-sm text-muted-foreground hidden sm:table-cell">{senior.address}</td>
@@ -224,15 +256,24 @@ const Seniors = () => {
                     </td>
                     <td className="p-3">
                       <div className="flex items-center gap-1">
-                        <Button variant="ghost" size="sm" onClick={() => setViewSeniorId(senior.id)} title="View">
-                          <Eye className="w-4 h-4" />
-                        </Button>
-                        <Button variant="ghost" size="sm" onClick={() => openEdit(senior)} title="Edit">
-                          <Pencil className="w-4 h-4" />
-                        </Button>
-                        {isAdmin && (
-                          <Button variant="ghost" size="sm" onClick={() => setDeleteId(senior.id)} title="Delete" className="text-destructive hover:text-destructive">
+                        {!isArchived && (
+                          <>
+                            <Button variant="ghost" size="sm" onClick={() => setViewSeniorId(senior.id)} title="View">
+                              <Eye className="w-4 h-4" />
+                            </Button>
+                            <Button variant="ghost" size="sm" onClick={() => openEdit(senior)} title="Edit">
+                              <Pencil className="w-4 h-4" />
+                            </Button>
+                          </>
+                        )}
+                        {isAdmin && !isArchived && (
+                          <Button variant="ghost" size="sm" onClick={() => setDeleteId(senior.id)} title="Archive" className="text-destructive hover:text-destructive">
                             <Trash2 className="w-4 h-4" />
+                          </Button>
+                        )}
+                        {isAdmin && isArchived && (
+                          <Button variant="ghost" size="sm" onClick={() => restoreMutation.mutate(senior.id)} title="Restore" className="text-primary hover:text-primary">
+                            <RotateCcw className="w-4 h-4" />
                           </Button>
                         )}
                       </div>
@@ -273,17 +314,22 @@ const Seniors = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Delete Confirmation */}
+      {/* Archive Confirmation */}
       <AlertDialog open={!!deleteId} onOpenChange={(open) => { if (!open) setDeleteId(null); }}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-            <AlertDialogDescription>This will permanently delete this senior citizen record. This action cannot be undone.</AlertDialogDescription>
+            <AlertDialogTitle>Archive this record?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will archive the senior citizen record. It will be hidden from staff but can be restored by an admin at any time.
+            </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={() => deleteId && deleteMutation.mutate(deleteId)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-              Delete
+            <AlertDialogAction
+              onClick={() => deleteId && deleteMutation.mutate(deleteId)}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Archive
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

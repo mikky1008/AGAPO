@@ -7,7 +7,7 @@ import { useUserRole } from "@/hooks/useUserRole";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Search, Plus, Pencil, Trash2, CalendarIcon } from "lucide-react";
+import { Search, Plus, Pencil, Trash2, RotateCcw, CalendarIcon } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -26,6 +26,7 @@ const Assistance = () => {
   const [editOpen, setEditOpen] = useState(false);
   const [editRecord, setEditRecord] = useState<any>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [showDeleted, setShowDeleted] = useState(false);
   const [form, setForm] = useState(emptyForm);
   const queryClient = useQueryClient();
   const { user } = useAuth();
@@ -33,9 +34,13 @@ const Assistance = () => {
   const { toast } = useToast();
 
   const { data: records = [] } = useQuery({
-    queryKey: ["assistance_records"],
+    queryKey: ["assistance_records", showDeleted],
     queryFn: async () => {
-      const { data, error } = await supabase.from("assistance_records").select("*, seniors(first_name, last_name)").order("created_at", { ascending: false });
+      let q = supabase.from("assistance_records").select("*, seniors(first_name, last_name)").order("created_at", { ascending: false });
+      if (isAdmin && showDeleted) {
+        q = supabase.from("assistance_records").select("*, seniors(first_name, last_name)").not("deleted_at", "is", null).order("created_at", { ascending: false });
+      }
+      const { data, error } = await q;
       if (error) throw error;
       return data;
     },
@@ -72,9 +77,7 @@ const Assistance = () => {
       setForm(emptyForm);
       toast({ title: "Record Added", description: "Assistance record saved." });
     },
-    onError: (error: any) => {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
-    },
+    onError: (error: any) => toast({ title: "Error", description: error.message, variant: "destructive" }),
   });
 
   const updateMutation = useMutation({
@@ -97,24 +100,21 @@ const Assistance = () => {
       setForm(emptyForm);
       toast({ title: "Record Updated", description: "Assistance record updated successfully." });
     },
-    onError: (error: any) => {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
-    },
+    onError: (error: any) => toast({ title: "Error", description: error.message, variant: "destructive" }),
   });
 
+  // Soft delete via RPC
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from("assistance_records").delete().eq("id", id);
+      const { error } = await supabase.rpc("soft_delete_assistance", { _record_id: id });
       if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["assistance_records"] });
       setDeleteId(null);
-      toast({ title: "Record Deleted", description: "Assistance record has been removed." });
+      toast({ title: "Record Archived", description: "Assistance record archived and can be restored by an admin." });
     },
-    onError: (error: any) => {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
-    },
+    onError: (error: any) => toast({ title: "Error", description: error.message, variant: "destructive" }),
   });
 
   const openEdit = (record: any) => {
@@ -135,9 +135,7 @@ const Assistance = () => {
     return name.toLowerCase().includes(search.toLowerCase()) || r.type.toLowerCase().includes(search.toLowerCase());
   });
 
-  const handleFormChange = (field: string, value: string) => {
-    setForm(prev => ({ ...prev, [field]: value }));
-  };
+  const handleFormChange = (field: string, value: string) => setForm(prev => ({ ...prev, [field]: value }));
 
   const renderFormFields = () => (
     <>
@@ -180,13 +178,7 @@ const Assistance = () => {
         <Label>Date Given</Label>
         <Popover>
           <PopoverTrigger asChild>
-            <Button
-              variant="outline"
-              className={cn(
-                "w-full justify-start text-left font-normal",
-                !form.dateGiven && "text-muted-foreground"
-              )}
-            >
+            <Button variant="outline" className={cn("w-full justify-start text-left font-normal", !form.dateGiven && "text-muted-foreground")}>
               <CalendarIcon className="mr-2 h-4 w-4" />
               {form.dateGiven ? format(new Date(form.dateGiven + "T00:00:00"), "PPP") : <span>Pick a date</span>}
             </Button>
@@ -210,26 +202,47 @@ const Assistance = () => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="page-title">Assistance Records</h1>
-          <p className="page-subtitle">{records.length} total records</p>
+          <p className="page-subtitle">{records.length} {showDeleted ? "archived" : "total"} records</p>
         </div>
-        <Dialog open={addOpen} onOpenChange={(open) => { setAddOpen(open); if (!open) setForm(emptyForm); }}>
-          <DialogTrigger asChild><Button><Plus className="w-4 h-4 mr-2" /> Add Record</Button></DialogTrigger>
-          <DialogContent>
-            <DialogHeader><DialogTitle style={{ fontFamily: "Sora, sans-serif" }}>New Assistance Record</DialogTitle></DialogHeader>
-            <form onSubmit={(e) => { e.preventDefault(); addMutation.mutate(); }} className="space-y-4">
-              {renderFormFields()}
-              <Button type="submit" className="w-full" disabled={addMutation.isPending}>
-                {addMutation.isPending ? "Saving..." : "Save Record"}
-              </Button>
-            </form>
-          </DialogContent>
-        </Dialog>
+        <div className="flex items-center gap-2">
+          {isAdmin && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowDeleted(!showDeleted)}
+              className={showDeleted ? "border-destructive text-destructive" : ""}
+            >
+              <Trash2 className="w-3.5 h-3.5 mr-1.5" />
+              {showDeleted ? "View Active" : "View Archived"}
+            </Button>
+          )}
+          {!showDeleted && (
+            <Dialog open={addOpen} onOpenChange={(open) => { setAddOpen(open); if (!open) setForm(emptyForm); }}>
+              <DialogTrigger asChild><Button><Plus className="w-4 h-4 mr-2" /> Add Record</Button></DialogTrigger>
+              <DialogContent>
+                <DialogHeader><DialogTitle style={{ fontFamily: "Sora, sans-serif" }}>New Assistance Record</DialogTitle></DialogHeader>
+                <form onSubmit={(e) => { e.preventDefault(); addMutation.mutate(); }} className="space-y-4">
+                  {renderFormFields()}
+                  <Button type="submit" className="w-full" disabled={addMutation.isPending}>
+                    {addMutation.isPending ? "Saving..." : "Save Record"}
+                  </Button>
+                </form>
+              </DialogContent>
+            </Dialog>
+          )}
+        </div>
       </div>
 
       <div className="relative max-w-md">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
         <Input placeholder="Search records..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-10" />
       </div>
+
+      {showDeleted && isAdmin && (
+        <div className="rounded-xl border border-destructive/30 bg-destructive/5 px-4 py-2.5 text-sm text-destructive">
+          Showing archived records. These are hidden from staff.
+        </div>
+      )}
 
       <div className="glass-table">
         <div className="overflow-x-auto">
@@ -247,7 +260,7 @@ const Assistance = () => {
             </thead>
             <tbody>
               {filtered.map((r) => (
-                <tr key={r.id} className="border-b border-border last:border-0 hover:bg-muted/30 transition-colors">
+                <tr key={r.id} className={`border-b border-border last:border-0 transition-colors ${r.deleted_at ? "opacity-60" : "hover:bg-muted/30"}`}>
                   <td className="p-3 text-sm font-medium text-foreground">{r.seniors?.first_name} {r.seniors?.last_name}</td>
                   <td className="p-3 text-sm text-muted-foreground">{r.type}</td>
                   <td className="p-3 text-sm text-muted-foreground hidden sm:table-cell">{r.description}</td>
@@ -260,11 +273,13 @@ const Assistance = () => {
                   </td>
                   <td className="p-3">
                     <div className="flex items-center gap-1">
-                      <Button variant="ghost" size="sm" onClick={() => openEdit(r)} title="Edit">
-                        <Pencil className="w-4 h-4" />
-                      </Button>
-                      {isAdmin && (
-                        <Button variant="ghost" size="sm" onClick={() => setDeleteId(r.id)} title="Delete" className="text-destructive hover:text-destructive">
+                      {!r.deleted_at && (
+                        <Button variant="ghost" size="sm" onClick={() => openEdit(r)} title="Edit">
+                          <Pencil className="w-4 h-4" />
+                        </Button>
+                      )}
+                      {isAdmin && !r.deleted_at && (
+                        <Button variant="ghost" size="sm" onClick={() => setDeleteId(r.id)} title="Archive" className="text-destructive hover:text-destructive">
                           <Trash2 className="w-4 h-4" />
                         </Button>
                       )}
@@ -293,17 +308,17 @@ const Assistance = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Delete Confirmation */}
+      {/* Archive Confirmation */}
       <AlertDialog open={!!deleteId} onOpenChange={(open) => { if (!open) setDeleteId(null); }}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-            <AlertDialogDescription>This will permanently delete this assistance record. This action cannot be undone.</AlertDialogDescription>
+            <AlertDialogTitle>Archive this record?</AlertDialogTitle>
+            <AlertDialogDescription>This record will be archived and hidden from staff. Admins can view archived records using the "View Archived" button.</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction onClick={() => deleteId && deleteMutation.mutate(deleteId)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-              Delete
+              Archive
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

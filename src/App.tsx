@@ -13,6 +13,8 @@ import Priority from "./pages/Priority";
 import Profile from "./pages/Profile";
 import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
+import AgentLogs from "./pages/AgentLogs";
+import Users from "./pages/Users";
 import AppLayout from "./components/AppLayout";
 
 const queryClient = new QueryClient();
@@ -39,6 +41,8 @@ const App = () => (
             <Route path="/assistance" element={<ProtectedRoute><Assistance /></ProtectedRoute>} />
             <Route path="/priority" element={<ProtectedRoute><Priority /></ProtectedRoute>} />
             <Route path="/reports" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
+            <Route path="/agent-logs" element={<ProtectedRoute><AgentLogs /></ProtectedRoute>} />
+            <Route path="/users" element={<ProtectedRoute><Users /></ProtectedRoute>} />
             <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>

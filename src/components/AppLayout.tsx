@@ -2,7 +2,7 @@ import { ReactNode, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard, Users, HandHeart, ShieldAlert, FileText, LogOut,
-  Menu, PanelLeftClose, PanelLeft, User,
+  Menu, PanelLeftClose, PanelLeft, User, Bot, UsersRound,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -11,13 +11,18 @@ import { useUserRole } from "@/hooks/useUserRole";
 import NotificationBell from "@/components/NotificationBell";
 import ChatAgent from "@/components/ChatAgent";
 
-const allNavItems = [
-  { to: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
-  { to: "/seniors", icon: Users, label: "Senior Citizens" },
-  { to: "/assistance", icon: HandHeart, label: "Assistance Records" },
-  { to: "/priority", icon: ShieldAlert, label: "Priority Assessment" },
-  { to: "/reports", icon: FileText, label: "Reports" },
-  { to: "/profile", icon: User, label: "Profile" },
+const staffNavItems = [
+  { to: "/dashboard",   icon: LayoutDashboard, label: "Dashboard" },
+  { to: "/seniors",     icon: Users,           label: "Senior Citizens" },
+  { to: "/assistance",  icon: HandHeart,       label: "Assistance Records" },
+  { to: "/priority",    icon: ShieldAlert,     label: "Priority Assessment" },
+  { to: "/reports",     icon: FileText,        label: "Reports" },
+  { to: "/profile",     icon: User,            label: "Profile" },
+];
+
+const adminOnlyNavItems = [
+  { to: "/agent-logs",  icon: Bot,             label: "AI Agent Logs" },
+  { to: "/users",       icon: UsersRound,      label: "User Management" },
 ];
 
 const BackgroundArt = () => (
@@ -59,6 +64,41 @@ const AppLayout = ({ children }: { children: ReactNode }) => {
 
   const handleLogout = async () => { await signOut(); navigate("/"); };
 
+  const navItems = isAdmin
+    ? [...staffNavItems.slice(0, -1), ...adminOnlyNavItems, staffNavItems[staffNavItems.length - 1]]
+    : staffNavItems;
+
+  const renderNavItem = (item: typeof staffNavItems[0]) => {
+    const isActive = location.pathname === item.to;
+    const link = (
+      <Link
+        key={item.to}
+        to={item.to}
+        onClick={() => setMobileOpen(false)}
+        className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200
+          ${collapsed ? "justify-center" : ""}
+          ${isActive
+            ? "text-[hsl(145,70%,55%)] border border-[hsl(145,70%,55%)/25%]"
+            : "text-[hsl(150,15%,62%)] hover:text-[hsl(150,20%,88%)] hover:bg-white/6"
+          }`}
+        style={isActive ? {
+          background: "linear-gradient(90deg, hsl(145 70% 55% / 0.16), hsl(158 64% 45% / 0.08))",
+          boxShadow: "0 2px 8px hsl(145 70% 30% / 0.18)"
+        } : {}}
+      >
+        <item.icon className="w-4 h-4 shrink-0" style={isActive ? { color: "hsl(145,70%,58%)" } : {}} />
+        {!collapsed && <span style={{ fontFamily: "Plus Jakarta Sans, sans-serif" }}>{item.label}</span>}
+      </Link>
+    );
+    if (collapsed) return (
+      <Tooltip key={item.to} delayDuration={0}>
+        <TooltipTrigger asChild>{link}</TooltipTrigger>
+        <TooltipContent side="right">{item.label}</TooltipContent>
+      </Tooltip>
+    );
+    return link;
+  };
+
   return (
     <div className="min-h-screen flex bg-background relative overflow-hidden">
       <BackgroundArt />
@@ -68,7 +108,6 @@ const AppLayout = ({ children }: { children: ReactNode }) => {
           onClick={() => setMobileOpen(false)} />
       )}
 
-      {/* Sidebar — very dark forest green */}
       <aside className={`fixed lg:static inset-y-0 left-0 z-40 sidebar-glass flex flex-col transition-all duration-300
         ${collapsed ? "w-16" : "w-64"}
         ${mobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}`}>
@@ -92,34 +131,26 @@ const AppLayout = ({ children }: { children: ReactNode }) => {
           )}
         </div>
 
-        {/* Nav */}
+        {/* Nav — staff items */}
         <nav className="flex-1 px-2.5 py-4 space-y-0.5 overflow-y-auto">
-          {allNavItems.map((item) => {
-            const isActive = location.pathname === item.to;
-            const link = (
-              <Link key={item.to} to={item.to} onClick={() => setMobileOpen(false)}
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200
-                  ${collapsed ? "justify-center" : ""}
-                  ${isActive
-                    ? "text-[hsl(145,70%,55%)] border border-[hsl(145,70%,55%)/25%]"
-                    : "text-[hsl(150,15%,62%)] hover:text-[hsl(150,20%,88%)] hover:bg-white/6"
-                  }`}
-                style={isActive ? {
-                  background: "linear-gradient(90deg, hsl(145 70% 55% / 0.16), hsl(158 64% 45% / 0.08))",
-                  boxShadow: "0 2px 8px hsl(145 70% 30% / 0.18)"
-                } : {}}>
-                <item.icon className="w-4 h-4 shrink-0" style={isActive ? { color: "hsl(145,70%,58%)" } : {}} />
-                {!collapsed && <span style={{ fontFamily: "Plus Jakarta Sans, sans-serif" }}>{item.label}</span>}
-              </Link>
-            );
-            if (collapsed) return (
-              <Tooltip key={item.to} delayDuration={0}>
-                <TooltipTrigger asChild>{link}</TooltipTrigger>
-                <TooltipContent side="right">{item.label}</TooltipContent>
-              </Tooltip>
-            );
-            return link;
-          })}
+          {staffNavItems.slice(0, -1).map(renderNavItem)}
+
+          {/* Admin-only section */}
+          {isAdmin && (
+            <>
+              {!collapsed && (
+                <p className="text-[9px] font-bold uppercase tracking-widest px-3 pt-4 pb-1"
+                  style={{ color: "hsl(150 12% 40%)", fontFamily: "Plus Jakarta Sans, sans-serif" }}>
+                  Admin
+                </p>
+              )}
+              {collapsed && <div className="h-2" />}
+              {adminOnlyNavItems.map(renderNavItem)}
+            </>
+          )}
+
+          {/* Profile always last */}
+          {renderNavItem(staffNavItems[staffNavItems.length - 1])}
         </nav>
 
         {/* Footer */}
@@ -156,7 +187,6 @@ const AppLayout = ({ children }: { children: ReactNode }) => {
 
       {/* Main content */}
       <div className="flex-1 flex flex-col min-h-screen relative z-10">
-        {/* Topbar */}
         <header className="h-14 flex items-center px-4 lg:px-6 sticky top-0 z-20 topbar-glass">
           <Button variant="ghost" size="icon" className="lg:hidden mr-2" onClick={() => setMobileOpen(true)}>
             <Menu className="w-5 h-5" />

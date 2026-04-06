@@ -5,13 +5,38 @@ import type { Database } from './types';
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
+export const isSupabaseConfigured = Boolean(SUPABASE_URL && SUPABASE_PUBLISHABLE_KEY);
+export const supabaseConfigError = isSupabaseConfigured
+  ? null
+  : 'Missing Supabase config. Set VITE_SUPABASE_URL and VITE_SUPABASE_PUBLISHABLE_KEY in a .env.local file, then restart the dev server.';
+
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
 
-export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
-  auth: {
-    storage: localStorage,
-    persistSession: true,
-    autoRefreshToken: true,
+let _supabase: ReturnType<typeof createClient<Database>> | null = null;
+
+export function getSupabaseClient() {
+  if (!isSupabaseConfigured) {
+    throw new Error(supabaseConfigError ?? 'Supabase is not configured.');
   }
+
+  if (_supabase) return _supabase;
+
+  _supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
+    auth: {
+      storage: localStorage,
+      persistSession: true,
+      autoRefreshToken: true,
+    },
+  });
+
+  return _supabase;
+}
+
+export const supabase = new Proxy({} as ReturnType<typeof createClient<Database>>, {
+  get(_target, prop) {
+    const client = getSupabaseClient();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return (client as any)[prop as any];
+  },
 });
