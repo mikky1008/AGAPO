@@ -1,237 +1,468 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Heart, Lock, Mail, ShieldCheck, User } from "lucide-react";
+import { Eye, EyeOff, Heart, Lock, Mail, ShieldCheck, User, CheckCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const ADMIN_CODE = import.meta.env.VITE_ADMIN_CODE || "agapo-admin-2025";
 
+// ── Inject login styles once ──────────────────────────────────────────────────
+if (typeof document !== "undefined" && !document.getElementById("agapo-login-styles")) {
+  const s = document.createElement("style");
+  s.id = "agapo-login-styles";
+  s.textContent = `
+    .agapo-login-bg {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+      position: relative;
+      overflow: hidden;
+      background: linear-gradient(135deg,
+        hsl(160 50% 8%) 0%,
+        hsl(155 55% 12%) 25%,
+        hsl(145 60% 10%) 50%,
+        hsl(158 52% 7%) 75%,
+        hsl(162 48% 9%) 100%);
+      background-size: 300% 300%;
+      animation: loginBgFloat 12s ease-in-out infinite;
+    }
+    .agapo-orb-1 {
+      position: absolute; top: -120px; left: -120px;
+      width: 480px; height: 480px; border-radius: 50%;
+      background: radial-gradient(circle, hsl(145 70% 40% / 0.28) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .agapo-orb-2 {
+      position: absolute; bottom: -100px; right: -100px;
+      width: 420px; height: 420px; border-radius: 50%;
+      background: radial-gradient(circle, hsl(158 64% 35% / 0.22) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .agapo-orb-3 {
+      position: absolute; top: 40%; left: 60%;
+      width: 280px; height: 280px; border-radius: 50%;
+      background: radial-gradient(circle, hsl(172 60% 42% / 0.14) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    /* The main glass login panel */
+    .agapo-glass-login {
+      background: rgba(10, 24, 15, 0.48);
+      backdrop-filter: blur(24px) saturate(160%);
+      -webkit-backdrop-filter: blur(24px) saturate(160%);
+      border: 1px solid rgba(255,255,255,0.13);
+      border-radius: 28px;
+      position: relative;
+      overflow: hidden;
+      animation: glowPulse 5s ease-in-out infinite, borderBreath 5s ease-in-out infinite;
+    }
+    .agapo-glass-login::before {
+      content: '';
+      position: absolute; top: 0; left: 0;
+      width: 30%; height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(134,239,172,0.55), transparent);
+      animation: shimmerSweep 4s linear infinite;
+      pointer-events: none;
+    }
+    .agapo-glass-login::after {
+      content: '';
+      position: absolute; inset: 0;
+      border-radius: 28px;
+      background: linear-gradient(135deg,
+        rgba(255,255,255,0.055) 0%,
+        rgba(255,255,255,0.000) 40%,
+        rgba(20,100,50,0.04) 100%);
+      pointer-events: none;
+    }
+    /* Glass inputs */
+    .agapo-input-glass {
+      width: 100%;
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.14);
+      border-radius: 12px;
+      color: #ffffff;
+      font-size: 14px;
+      padding: 12px 16px 12px 42px;
+      outline: none;
+      transition: all 0.2s;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+    .agapo-input-glass::placeholder { color: rgba(255,255,255,0.40); }
+    .agapo-input-glass:focus {
+      background: rgba(255,255,255,0.11);
+      border-color: rgba(74,222,128,0.55);
+      box-shadow: 0 0 0 3px rgba(74,222,128,0.14);
+    }
+    .agapo-input-glass.has-error {
+      border-color: rgba(248,113,113,0.65);
+    }
+    .agapo-input-glass.pr-icon { padding-right: 40px; }
+    /* Tab styles */
+    .agapo-tab[data-state="active"] {
+      background: rgba(255,255,255,0.11) !important;
+      color: #ffffff !important;
+    }
+    .agapo-tab[data-state="inactive"] {
+      color: rgba(255,255,255,0.45) !important;
+    }
+  `;
+  document.head.appendChild(s);
+}
+
+// ── Sub-components ────────────────────────────────────────────────────────────
+const PwToggle = ({ show, toggle }: { show: boolean; toggle: () => void }) => (
+  <button
+    type="button" onClick={toggle}
+    className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white/85 transition-colors z-10"
+  >
+    {show ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+  </button>
+);
+
+const FieldError = ({ msg }: { msg?: string }) =>
+  msg ? <p className="text-xs text-red-300/85 mt-1 pl-1">{msg}</p> : null;
+
+const PrimaryBtn = ({
+  children, type = "button", disabled,
+}: {
+  children: React.ReactNode;
+  type?: "button" | "submit";
+  disabled?: boolean;
+}) => (
+  <button
+    type={type} disabled={disabled}
+    className="w-full py-3 rounded-[14px] font-bold text-white transition-all hover:brightness-110 active:scale-[0.98] disabled:opacity-50"
+    style={{ background: "var(--gradient-button)", boxShadow: "var(--shadow-button)" }}
+  >
+    {children}
+  </button>
+);
+
+// ── Main ──────────────────────────────────────────────────────────────────────
 const Login = () => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [fullName, setFullName] = useState("");
-  const [selectedRole, setSelectedRole] = useState<"staff" | "admin">("staff");
-  const [adminCode, setAdminCode] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [forgotMode, setForgotMode] = useState(false);
-  const [forgotEmail, setForgotEmail] = useState("");
   const navigate = useNavigate();
-  const { toast } = useToast();
   const { user } = useAuth();
+  const { toast } = useToast();
+  const [activeTab, setActiveTab] = useState("login");
 
   useEffect(() => {
     if (user) navigate("/dashboard", { replace: true });
   }, [user, navigate]);
 
+  /* ── Sign In state ── */
+  const [loginEmail,    setLoginEmail]    = useState("");
+  const [loginPassword, setLoginPassword] = useState("");
+  const [showLoginPw,   setShowLoginPw]   = useState(false);
+  const [signingIn,     setSigningIn]     = useState(false);
+  const [loginSuccess,  setLoginSuccess]  = useState(false);
+  const [loginErrs,     setLoginErrs]     = useState<Record<string,string>>({});
+
+  /* ── Sign Up state ── */
+  const [fullName,       setFullName]       = useState("");
+  const [signupEmail,    setSignupEmail]    = useState("");
+  const [signupPassword, setSignupPassword] = useState("");
+  const [confirmPw,      setConfirmPw]      = useState("");
+  const [selectedRole,   setSelectedRole]   = useState<"staff"|"admin">("staff");
+  const [adminCode,      setAdminCode]      = useState("");
+  const [showSignupPw,   setShowSignupPw]   = useState(false);
+  const [showConfirmPw,  setShowConfirmPw]  = useState(false);
+  const [signingUp,      setSigningUp]      = useState(false);
+  const [signupSuccess,  setSignupSuccess]  = useState(false);
+  const [signupErrs,     setSignupErrs]     = useState<Record<string,string>>({});
+
+  /* ── Forgot password ── */
+  const [forgotMode,  setForgotMode]  = useState(false);
+  const [forgotEmail, setForgotEmail] = useState("");
+  const [sendingReset, setSendingReset] = useState(false);
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    setLoading(false);
-    if (error) toast({ title: "Login Failed", description: error.message, variant: "destructive" });
+    const errs: Record<string,string> = {};
+    if (!loginEmail.trim())  errs.email    = "Please enter your email.";
+    if (!loginPassword)      errs.password = "Please enter your password.";
+    setLoginErrs(errs);
+    if (Object.keys(errs).length) return;
+    setSigningIn(true);
+    const { error } = await supabase.auth.signInWithPassword({ email: loginEmail, password: loginPassword });
+    setSigningIn(false);
+    if (error) {
+      setLoginErrs({ general: "Invalid email or password." });
+    } else {
+      setLoginSuccess(true);
+      setTimeout(() => navigate("/dashboard"), 800);
+    }
   };
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (selectedRole === "admin" && adminCode !== ADMIN_CODE) {
-      toast({ title: "Invalid Admin Code", description: "Contact your barangay administrator.", variant: "destructive" });
-      return;
+    const errs: Record<string,string> = {};
+    if (!fullName.trim())              errs.fullName   = "Full name is required.";
+    if (!signupEmail.trim())           errs.email      = "Email is required.";
+    if (signupPassword.length < 6)     errs.password   = "Password must be at least 6 characters.";
+    if (signupPassword !== confirmPw)  errs.confirmPw  = "Passwords do not match.";
+    if (selectedRole === "admin" && adminCode !== ADMIN_CODE)
+                                       errs.adminCode  = "Invalid admin code.";
+    setSignupErrs(errs);
+    if (Object.keys(errs).length) return;
+    setSigningUp(true);
+    const { error } = await supabase.auth.signUp({
+      email: signupEmail,
+      password: signupPassword,
+      options: {
+        data: { full_name: fullName.trim(), role: selectedRole },
+        emailRedirectTo: window.location.origin,
+      },
+    });
+    setSigningUp(false);
+    if (error) {
+      setSignupErrs({ general: error.message });
+    } else {
+      setSignupSuccess(true);
     }
-    setLoading(true);
-    const { error } = await supabase.auth.signUp({ email, password, options: { data: { full_name: fullName, role: selectedRole }, emailRedirectTo: window.location.origin } });
-    setLoading(false);
-    if (error) toast({ title: "Signup Failed", description: error.message, variant: "destructive" });
-    else toast({ title: "Account Created", description: "Check your email to confirm your account." });
   };
 
   const handleForgotPassword = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
-    const { error } = await supabase.auth.resetPasswordForEmail(forgotEmail, { redirectTo: `${window.location.origin}/reset-password` });
-    setLoading(false);
-    if (error) toast({ title: "Error", description: error.message, variant: "destructive" });
-    else { toast({ title: "Reset Link Sent", description: "Check your email for the password reset link." }); setForgotMode(false); }
+    if (!forgotEmail.trim()) return;
+    setSendingReset(true);
+    const { error } = await supabase.auth.resetPasswordForEmail(forgotEmail, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
+    setSendingReset(false);
+    if (error) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "Reset Link Sent", description: "Check your email for the password reset link." });
+      setForgotMode(false);
+    }
   };
 
+  // ── Signup success screen ──
+  if (signupSuccess) {
+    return (
+      <div className="agapo-login-bg">
+        <div className="agapo-orb-1" /><div className="agapo-orb-2" /><div className="agapo-orb-3" />
+        <div className="agapo-glass-login p-8 w-full max-w-md text-center space-y-6 relative z-10">
+          <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto"
+            style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.16)" }}>
+            <CheckCircle className="w-8 h-8 text-emerald-400" />
+          </div>
+          <div>
+            <h2 className="text-xl font-bold text-white">Check your email</h2>
+            <p className="text-sm text-white/60 mt-2">
+              Confirmation sent to <strong className="text-white">{signupEmail}</strong>.
+              Verify before signing in.
+            </p>
+          </div>
+          <PrimaryBtn type="button" onClick={() => { setSignupSuccess(false); setActiveTab("login"); }}>
+            Back to Sign In
+          </PrimaryBtn>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden"
-      style={{ background: "linear-gradient(145deg, hsl(150 28% 95%) 0%, hsl(162 24% 96%) 50%, hsl(145 22% 94%) 100%)" }}>
+    <div className="agapo-login-bg">
+      <div className="agapo-orb-1" /><div className="agapo-orb-2" /><div className="agapo-orb-3" />
 
-      {/* Background ambient orbs */}
-      <div className="absolute -top-40 -left-40 w-[500px] h-[500px] rounded-full opacity-25 blur-3xl pointer-events-none"
-        style={{ background: "radial-gradient(circle, hsl(158 64% 40%) 0%, transparent 70%)" }} />
-      <div className="absolute -bottom-40 -right-40 w-[420px] h-[420px] rounded-full opacity-20 blur-3xl pointer-events-none"
-        style={{ background: "radial-gradient(circle, hsl(145 72% 44%) 0%, transparent 70%)" }} />
-      <div className="absolute top-1/3 right-1/4 w-64 h-64 rounded-full opacity-14 blur-3xl pointer-events-none"
-        style={{ background: "radial-gradient(circle, hsl(172 60% 42%) 0%, transparent 70%)" }} />
+      <div className="agapo-glass-login p-8 w-full max-w-md space-y-6 relative z-10">
 
-      {/* Senior-care themed SVG art — bottom left */}
-      <svg className="absolute bottom-0 left-0 opacity-[0.065] pointer-events-none select-none"
-        width="340" height="280" viewBox="0 0 340 280" fill="none" aria-hidden="true">
-        <circle cx="90" cy="220" r="15" fill="hsl(158,55%,35%)"/>
-        <rect x="76" y="170" width="28" height="55" rx="14" fill="hsl(158,55%,35%)"/>
-        <line x1="104" y1="230" x2="118" y2="250" stroke="hsl(158,55%,35%)" strokeWidth="4" strokeLinecap="round"/>
-        <line x1="118" y1="250" x2="126" y2="250" stroke="hsl(158,55%,35%)" strokeWidth="4" strokeLinecap="round"/>
-        <path d="M76 192 Q58 205 52 220" stroke="hsl(158,55%,35%)" strokeWidth="6" strokeLinecap="round" fill="none"/>
-        <path d="M104 192 Q120 202 115 222" stroke="hsl(158,55%,35%)" strokeWidth="6" strokeLinecap="round" fill="none"/>
-        <path d="M195 140 C195 132 183 125 178 134 C173 125 161 132 161 140 C161 152 178 163 178 163 C178 163 195 152 195 140 Z" fill="hsl(145,65%,42%)" opacity="0.8"/>
-        <path d="M230 90 C230 74 248 65 261 78 C248 78 244 90 230 90 Z" fill="hsl(158,64%,38%)" opacity="0.7"/>
-        <line x1="242" y1="90" x2="245" y2="108" stroke="hsl(158,64%,38%)" strokeWidth="2.5" strokeLinecap="round" opacity="0.7"/>
-        <circle cx="310" cy="60" r="4" fill="hsl(145,72%,44%)" opacity="0.5"/>
-        <circle cx="50" cy="80" r="3" fill="hsl(172,60%,40%)" opacity="0.4"/>
-      </svg>
-
-      {/* Top right corner art */}
-      <svg className="absolute top-0 right-0 opacity-[0.055] pointer-events-none select-none"
-        width="260" height="220" viewBox="0 0 260 220" fill="none" aria-hidden="true">
-        <path d="M170 60 C170 44 188 35 201 48 C188 48 184 60 170 60 Z" fill="hsl(158,64%,38%)" opacity="0.8"/>
-        <line x1="182" y1="60" x2="185" y2="78" stroke="hsl(158,64%,38%)" strokeWidth="2.5" strokeLinecap="round" opacity="0.8"/>
-        <path d="M230 120 C230 108 218 100 213 109 C208 100 196 108 196 120 C196 132 213 142 213 142 C213 142 230 132 230 120Z" fill="hsl(145,65%,42%)" opacity="0.6"/>
-        <circle cx="80" cy="40" r="16" fill="hsl(158,55%,35%)" opacity="0.5"/>
-        <rect x="68" y="56" width="24" height="46" rx="12" fill="hsl(158,55%,35%)" opacity="0.5"/>
-        <circle cx="130" cy="180" r="3" fill="hsl(172,60%,40%)" opacity="0.4"/>
-        <circle cx="220" cy="30" r="4" fill="hsl(145,72%,44%)" opacity="0.45"/>
-      </svg>
-
-      <div className="w-full max-w-md animate-fade-in relative z-10">
         {/* Brand */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl mb-4 shadow-[0_8px_28px_hsl(158_64%_38%/0.42)]"
-            style={{ background: "linear-gradient(135deg, hsl(158 64% 38%) 0%, hsl(145 72% 44%) 100%)" }}>
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-16 h-16 rounded-2xl flex items-center justify-center"
+            style={{
+              background: "linear-gradient(135deg, hsl(145 70% 38%) 0%, hsl(158 64% 28%) 100%)",
+              boxShadow: "0 8px 28px hsl(158 64% 20% / 0.55)",
+            }}>
             <Heart className="w-8 h-8 text-white drop-shadow" />
           </div>
-          <h1 className="text-3xl font-bold tracking-tight" style={{
-            fontFamily: "Sora, sans-serif",
-            background: "linear-gradient(135deg, hsl(158 64% 32%) 0%, hsl(145 72% 40%) 100%)",
-            WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text",
-          }}>AGAPO</h1>
-          <p className="text-sm font-medium text-muted-foreground mt-1.5"
-            style={{ fontFamily: "Plus Jakarta Sans, sans-serif" }}>
-            Senior Citizen Information & Assistance Management
-          </p>
-          <p className="text-xs text-muted-foreground/65 mt-0.5"
-            style={{ fontFamily: "Plus Jakarta Sans, sans-serif" }}>
-            Barangay San Francisco, Mainit, Surigao del Norte
-          </p>
+          <div className="text-center">
+            <h1 className="text-2xl font-bold tracking-tight text-white" style={{ fontFamily: "Sora, sans-serif" }}>
+              AGAPO
+            </h1>
+            <p className="text-xs text-white/50 mt-0.5" style={{ fontFamily: "Plus Jakarta Sans, sans-serif" }}>
+              Barangay San Francisco, Mainit, Surigao del Norte
+            </p>
+          </div>
         </div>
 
-        {/* Card */}
-        <div className="rounded-2xl p-6 border border-white/68"
-          style={{
-            background: "hsl(0 0% 100% / 0.72)",
-            backdropFilter: "blur(24px) saturate(175%)", WebkitBackdropFilter: "blur(24px) saturate(175%)",
-            boxShadow: "0 8px 32px -4px hsl(158 64% 38% / 0.16), 0 2px 8px hsl(0 0% 0% / 0.06), inset 0 1px 0 hsl(0 0% 100% / 0.92)",
-          }}>
-          {forgotMode ? (
-            <div>
-              <h2 className="text-lg font-semibold text-foreground mb-1" style={{ fontFamily: "Sora, sans-serif" }}>Reset Password</h2>
-              <p className="text-sm text-muted-foreground mb-5" style={{ fontFamily: "Plus Jakarta Sans, sans-serif" }}>Enter your email to receive a reset link</p>
-              <form onSubmit={handleForgotPassword} className="space-y-4">
-                <div className="space-y-1.5">
-                  <Label htmlFor="forgot-email" className="field-label">Email Address</Label>
-                  <div className="relative">
-                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/58" />
-                    <Input id="forgot-email" type="email" value={forgotEmail} onChange={(e) => setForgotEmail(e.target.value)} placeholder="you@example.com" className="pl-10" required />
-                  </div>
-                </div>
-                <Button type="submit" className="w-full" disabled={loading}>{loading ? "Sending…" : "Send Reset Link"}</Button>
-                <Button type="button" variant="ghost" className="w-full text-sm" onClick={() => setForgotMode(false)}>← Back to Sign In</Button>
-              </form>
+        {/* Forgot password mode */}
+        {forgotMode ? (
+          <div className="space-y-4">
+            <div className="text-center">
+              <h2 className="text-base font-semibold text-white">Reset Password</h2>
+              <p className="text-xs text-white/50 mt-1">Enter your email to receive a reset link</p>
             </div>
-          ) : (
-            <Tabs defaultValue="login" className="w-full">
-              <TabsList className="grid w-full grid-cols-2 mb-5 bg-muted/52 rounded-xl p-1 h-10">
-                <TabsTrigger value="login" className="rounded-lg text-xs font-semibold" style={{ fontFamily: "Plus Jakarta Sans, sans-serif" }}>Sign In</TabsTrigger>
-                <TabsTrigger value="signup" className="rounded-lg text-xs font-semibold" style={{ fontFamily: "Plus Jakarta Sans, sans-serif" }}>Create Account</TabsTrigger>
-              </TabsList>
+            <form onSubmit={handleForgotPassword} className="space-y-3">
+              <div className="relative">
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40 pointer-events-none z-10" />
+                <input
+                  type="email" placeholder="Email address"
+                  value={forgotEmail} onChange={e => setForgotEmail(e.target.value)}
+                  className="agapo-input-glass" required
+                />
+              </div>
+              <PrimaryBtn type="submit" disabled={sendingReset}>
+                {sendingReset ? "Sending…" : "Send Reset Link"}
+              </PrimaryBtn>
+              <button type="button" onClick={() => setForgotMode(false)}
+                className="w-full text-xs text-white/45 hover:text-white/80 transition-colors text-center pt-1">
+                ← Back to Sign In
+              </button>
+            </form>
+          </div>
+        ) : (
+          <Tabs value={activeTab} onValueChange={v => { setActiveTab(v); setLoginErrs({}); setSignupErrs({}); }}>
+            <TabsList
+              className="grid grid-cols-2 w-full rounded-xl p-1 gap-1"
+              style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.10)" }}
+            >
+              <TabsTrigger value="login"  className="agapo-tab rounded-[10px] text-sm font-semibold transition-all">Sign In</TabsTrigger>
+              <TabsTrigger value="signup" className="agapo-tab rounded-[10px] text-sm font-semibold transition-all">Create Account</TabsTrigger>
+            </TabsList>
 
-              <TabsContent value="login">
-                <form onSubmit={handleLogin} className="space-y-4">
-                  <div className="space-y-1.5">
-                    <Label htmlFor="login-email" className="field-label">Email</Label>
-                    <div className="relative">
-                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/58" />
-                      <Input id="login-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" className="pl-10" required />
-                    </div>
+            {/* ══ SIGN IN ══ */}
+            <TabsContent value="login" className="mt-5 space-y-4">
+              {loginSuccess && (
+                <div className="flex items-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold text-emerald-300"
+                  style={{ background: "rgba(34,197,94,0.12)", border: "1px solid rgba(34,197,94,0.25)" }}>
+                  <CheckCircle className="w-4 h-4 shrink-0" /> Login successful. Redirecting…
+                </div>
+              )}
+              {loginErrs.general && (
+                <p className="text-sm text-red-300 font-medium text-center">{loginErrs.general}</p>
+              )}
+              <form onSubmit={handleLogin} className="space-y-3" noValidate>
+                <div>
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40 pointer-events-none z-10" />
+                    <input type="email" placeholder="Email address" value={loginEmail}
+                      onChange={e => { setLoginEmail(e.target.value); setLoginErrs(p => ({...p, email: "", general: ""})); }}
+                      className={`agapo-input-glass ${loginErrs.email ? "has-error" : ""}`} />
                   </div>
-                  <div className="space-y-1.5">
-                    <Label htmlFor="login-password" className="field-label">Password</Label>
-                    <div className="relative">
-                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/58" />
-                      <Input id="login-password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Your password" className="pl-10" required />
-                    </div>
+                  <FieldError msg={loginErrs.email} />
+                </div>
+                <div>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40 pointer-events-none z-10" />
+                    <input type={showLoginPw ? "text" : "password"} placeholder="Password" value={loginPassword}
+                      onChange={e => { setLoginPassword(e.target.value); setLoginErrs(p => ({...p, password: "", general: ""})); }}
+                      className={`agapo-input-glass pr-icon ${loginErrs.password ? "has-error" : ""}`} />
+                    <PwToggle show={showLoginPw} toggle={() => setShowLoginPw(p => !p)} />
                   </div>
-                  <Button type="submit" className="w-full h-11 text-sm" disabled={loading}>{loading ? "Signing in…" : "Sign In to AGAPO"}</Button>
-                  <button type="button" onClick={() => setForgotMode(true)} className="text-xs font-semibold text-primary/72 hover:text-primary w-full text-center transition-colors"
-                    style={{ fontFamily: "Plus Jakarta Sans, sans-serif" }}>Forgot your password?</button>
-                </form>
-              </TabsContent>
+                  <FieldError msg={loginErrs.password} />
+                </div>
+                <PrimaryBtn type="submit" disabled={signingIn}>
+                  {signingIn ? "Signing in…" : "Sign In to AGAPO"}
+                </PrimaryBtn>
+                <button type="button" onClick={() => setForgotMode(true)}
+                  className="w-full text-xs text-white/40 hover:text-white/75 transition-colors text-center pt-0.5">
+                  Forgot your password?
+                </button>
+              </form>
+            </TabsContent>
 
-              <TabsContent value="signup">
-                <form onSubmit={handleSignup} className="space-y-4">
-                  <div className="space-y-1.5">
-                    <Label htmlFor="signup-name" className="field-label">Full Name</Label>
+            {/* ══ SIGN UP ══ */}
+            <TabsContent value="signup" className="mt-5 space-y-3">
+              {signupErrs.general && (
+                <p className="text-sm text-red-300 text-center">{signupErrs.general}</p>
+              )}
+              <form onSubmit={handleSignup} className="space-y-3" noValidate>
+                {/* Full Name */}
+                <div>
+                  <div className="relative">
+                    <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40 pointer-events-none z-10" />
+                    <input type="text" placeholder="Full Name *" value={fullName}
+                      onChange={e => setFullName(e.target.value)} maxLength={100}
+                      className={`agapo-input-glass ${signupErrs.fullName ? "has-error" : ""}`} />
+                  </div>
+                  <FieldError msg={signupErrs.fullName} />
+                </div>
+
+                {/* Email */}
+                <div>
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40 pointer-events-none z-10" />
+                    <input type="email" placeholder="Email address *" value={signupEmail}
+                      onChange={e => setSignupEmail(e.target.value)}
+                      className={`agapo-input-glass ${signupErrs.email ? "has-error" : ""}`} />
+                  </div>
+                  <FieldError msg={signupErrs.email} />
+                </div>
+
+                {/* Password */}
+                <div>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40 pointer-events-none z-10" />
+                    <input type={showSignupPw ? "text" : "password"} placeholder="Password (min 6 chars) *"
+                      value={signupPassword} onChange={e => setSignupPassword(e.target.value)} minLength={6}
+                      className={`agapo-input-glass pr-icon ${signupErrs.password ? "has-error" : ""}`} />
+                    <PwToggle show={showSignupPw} toggle={() => setShowSignupPw(p => !p)} />
+                  </div>
+                  <FieldError msg={signupErrs.password} />
+                </div>
+
+                {/* Confirm Password */}
+                <div>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40 pointer-events-none z-10" />
+                    <input type={showConfirmPw ? "text" : "password"} placeholder="Confirm Password *"
+                      value={confirmPw} onChange={e => setConfirmPw(e.target.value)}
+                      className={`agapo-input-glass pr-icon ${signupErrs.confirmPw ? "has-error" : ""}`} />
+                    <PwToggle show={showConfirmPw} toggle={() => setShowConfirmPw(p => !p)} />
+                  </div>
+                  <FieldError msg={signupErrs.confirmPw} />
+                </div>
+
+                {/* Role selector */}
+                <div className="grid grid-cols-2 gap-2">
+                  {(["staff", "admin"] as const).map(r => (
+                    <button key={r} type="button" onClick={() => { setSelectedRole(r); setAdminCode(""); }}
+                      className="py-2.5 rounded-xl text-sm font-semibold transition-all"
+                      style={{
+                        background: selectedRole === r ? "var(--gradient-button)" : "rgba(255,255,255,0.06)",
+                        border: `1px solid ${selectedRole === r ? "transparent" : "rgba(255,255,255,0.10)"}`,
+                        color: selectedRole === r ? "#fff" : "rgba(255,255,255,0.50)",
+                        boxShadow: selectedRole === r ? "var(--shadow-button)" : "none",
+                      }}>
+                      {r === "staff" ? "Barangay Staff" : "Administrator"}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Admin code */}
+                {selectedRole === "admin" && (
+                  <div className="rounded-xl p-3.5 space-y-2"
+                    style={{
+                      background: "rgba(255,255,255,0.04)",
+                      border: `1px solid ${signupErrs.adminCode ? "rgba(248,113,113,0.50)" : "rgba(255,255,255,0.10)"}`,
+                    }}>
+                    <div className="flex items-center gap-2 text-sm font-semibold text-white">
+                      <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
+                      Admin Verification Code
+                    </div>
                     <div className="relative">
-                      <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/58" />
-                      <Input id="signup-name" value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="Juan Dela Cruz" className="pl-10" required />
+                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40 pointer-events-none z-10" />
+                      <input type="password" placeholder="Enter admin code" value={adminCode}
+                        onChange={e => setAdminCode(e.target.value)}
+                        className={`agapo-input-glass ${signupErrs.adminCode ? "has-error" : ""}`} />
                     </div>
+                    <FieldError msg={signupErrs.adminCode} />
+                    <p className="text-[11px] text-white/35">Contact your barangay administrator to obtain this code.</p>
                   </div>
-                  <div className="space-y-1.5">
-                    <Label htmlFor="signup-email" className="field-label">Email</Label>
-                    <div className="relative">
-                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/58" />
-                      <Input id="signup-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" className="pl-10" required />
-                    </div>
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label htmlFor="signup-password" className="field-label">Password</Label>
-                    <div className="relative">
-                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/58" />
-                      <Input id="signup-password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Min. 6 characters" className="pl-10" required minLength={6} />
-                    </div>
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label className="field-label">Role</Label>
-                    <Select value={selectedRole} onValueChange={(v) => { setSelectedRole(v as "staff" | "admin"); setAdminCode(""); }}>
-                      <SelectTrigger className="bg-white/62 backdrop-blur-sm border-white/58 rounded-xl">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="staff">Barangay Staff</SelectItem>
-                        <SelectItem value="admin">Administrator</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <p className="text-[11px] text-muted-foreground/68 leading-relaxed"
-                      style={{ fontFamily: "Plus Jakarta Sans, sans-serif" }}>
-                      {selectedRole === "staff" ? "Staff can view, add, and edit records." : "Administrators have full system access."}
-                    </p>
-                  </div>
-                  {selectedRole === "admin" && (
-                    <div className="space-y-2 rounded-xl p-3.5"
-                      style={{ background: "hsl(158 64% 38% / 0.07)", border: "1px solid hsl(158 64% 38% / 0.20)" }}>
-                      <Label htmlFor="admin-code" className="flex items-center gap-1.5 field-label">
-                        <ShieldCheck className="w-3.5 h-3.5 text-primary" />Admin Verification Code
-                      </Label>
-                      <Input id="admin-code" type="password" value={adminCode} onChange={(e) => setAdminCode(e.target.value)} placeholder="Enter admin code" required />
-                      <p className="text-[11px] text-muted-foreground/68" style={{ fontFamily: "Plus Jakarta Sans, sans-serif" }}>
-                        Contact your barangay administrator to obtain this code.
-                      </p>
-                    </div>
-                  )}
-                  <Button type="submit" className="w-full h-11 text-sm" disabled={loading}>
-                    {loading ? "Creating account…" : `Create ${selectedRole === "admin" ? "Admin" : "Staff"} Account`}
-                  </Button>
-                </form>
-              </TabsContent>
-            </Tabs>
-          )}
-        </div>
+                )}
+
+                <PrimaryBtn type="submit" disabled={signingUp}>
+                  {signingUp ? "Creating account…" : `Create ${selectedRole === "admin" ? "Admin" : "Staff"} Account`}
+                </PrimaryBtn>
+              </form>
+            </TabsContent>
+          </Tabs>
+        )}
       </div>
     </div>
   );

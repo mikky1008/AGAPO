@@ -1,5 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useUserRole } from "@/hooks/useUserRole";
+import { Navigate } from "react-router-dom";
 import { Bot, TrendingUp, TrendingDown, Minus, Clock } from "lucide-react";
 
 const levelColor = (level: string | null) => {
@@ -19,6 +21,9 @@ const ChangeIcon = ({ from, to }: { from: string | null; to: string | null }) =>
 };
 
 const AgentLogs = () => {
+  // ── ALL hooks before any conditional return ───────────────
+  const { isAdmin, isLoading: roleLoading } = useUserRole();
+
   const { data: logs = [], isLoading } = useQuery({
     queryKey: ["ai_agent_logs"],
     queryFn: async () => {
@@ -30,7 +35,8 @@ const AgentLogs = () => {
       if (error) throw error;
       return data;
     },
-    refetchInterval: 15000, // live-refresh every 15s
+    enabled: isAdmin,
+    refetchInterval: 15000,
   });
 
   const { data: systemLogs = [], isLoading: sysLoading } = useQuery({
@@ -44,8 +50,20 @@ const AgentLogs = () => {
       if (error) throw error;
       return data;
     },
+    enabled: isAdmin,
     refetchInterval: 15000,
   });
+
+  // ── Conditional returns AFTER all hooks ───────────────────
+  if (roleLoading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <p className="text-sm text-muted-foreground">Checking permissions…</p>
+      </div>
+    );
+  }
+
+  if (!isAdmin) return <Navigate to="/dashboard" replace />;
 
   const actionBadge = (action: string) => {
     if (action === "INSERT") return "bg-primary/10 text-primary";

@@ -2,27 +2,28 @@ import { ReactNode, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard, Users, HandHeart, ShieldAlert, FileText, LogOut,
-  Menu, PanelLeftClose, PanelLeft, User, Bot, UsersRound,
+  Menu, PanelLeftClose, PanelLeft, User, Bot, UsersRound, Sun, Moon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserRole } from "@/hooks/useUserRole";
+import { useTheme } from "@/contexts/ThemeContext";
 import NotificationBell from "@/components/NotificationBell";
 import ChatAgent from "@/components/ChatAgent";
 
 const staffNavItems = [
-  { to: "/dashboard",   icon: LayoutDashboard, label: "Dashboard" },
-  { to: "/seniors",     icon: Users,           label: "Senior Citizens" },
-  { to: "/assistance",  icon: HandHeart,       label: "Assistance Records" },
-  { to: "/priority",    icon: ShieldAlert,     label: "Priority Assessment" },
-  { to: "/reports",     icon: FileText,        label: "Reports" },
-  { to: "/profile",     icon: User,            label: "Profile" },
+  { to: "/dashboard",  icon: LayoutDashboard, label: "Dashboard" },
+  { to: "/seniors",    icon: Users,           label: "Senior Citizens" },
+  { to: "/assistance", icon: HandHeart,       label: "Assistance Records" },
+  { to: "/priority",   icon: ShieldAlert,     label: "Priority Assessment" },
+  { to: "/reports",    icon: FileText,        label: "Reports" },
+  { to: "/profile",    icon: User,            label: "Profile" },
 ];
 
 const adminOnlyNavItems = [
-  { to: "/agent-logs",  icon: Bot,             label: "AI Agent Logs" },
-  { to: "/users",       icon: UsersRound,      label: "User Management" },
+  { to: "/agent-logs", icon: Bot,        label: "AI Agent Logs" },
+  { to: "/users",      icon: UsersRound, label: "User Management" },
 ];
 
 const BackgroundArt = () => (
@@ -30,7 +31,7 @@ const BackgroundArt = () => (
     className="pointer-events-none select-none fixed bottom-0 right-0 z-0"
     width="480" height="380" viewBox="0 0 480 380" fill="none"
     xmlns="http://www.w3.org/2000/svg" aria-hidden="true"
-    style={{ opacity: 0.045 }}
+    style={{ opacity: 0.04 }}
   >
     <ellipse cx="120" cy="335" rx="38" ry="12" fill="hsl(158,55%,32%)"/>
     <rect x="104" y="252" width="32" height="74" rx="16" fill="hsl(158,55%,32%)"/>
@@ -45,35 +46,26 @@ const BackgroundArt = () => (
     <path d="M308 270 Q280 254 266 264" stroke="hsl(152,52%,35%)" strokeWidth="8" strokeLinecap="round" fill="none"/>
     <path d="M344 270 Q372 254 386 264" stroke="hsl(152,52%,35%)" strokeWidth="8" strokeLinecap="round" fill="none"/>
     <path d="M158 306 Q200 260 258 288" stroke="hsl(145,60%,38%)" strokeWidth="2.5" strokeDasharray="7 5" strokeLinecap="round"/>
-    <path d="M400 110 C400 93 418 84 431 97 C418 97 414 110 400 110Z" fill="hsl(158,60%,36%)"/>
-    <line x1="412" y1="110" x2="415" y2="128" stroke="hsl(158,60%,36%)" strokeWidth="2.5" strokeLinecap="round"/>
-    <circle cx="185" cy="92" r="4" fill="hsl(158,60%,36%)"/>
-    <circle cx="448" cy="185" r="3" fill="hsl(145,65%,40%)"/>
-    <circle cx="290" cy="54" r="5" fill="hsl(172,56%,38%)"/>
     <circle cx="326" cy="232" r="180" stroke="hsl(158,55%,32%)" strokeWidth="1.2" fill="none" strokeDasharray="10 7"/>
   </svg>
 );
 
 const AppLayout = ({ children }: { children: ReactNode }) => {
-  const location = useLocation();
-  const navigate = useNavigate();
+  const location  = useLocation();
+  const navigate  = useNavigate();
   const { signOut, user } = useAuth();
   const { role, isAdmin } = useUserRole();
+  const { theme, toggleTheme } = useTheme();
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [collapsed, setCollapsed] = useState(false);
+  const [collapsed,  setCollapsed]  = useState(false);
 
   const handleLogout = async () => { await signOut(); navigate("/"); };
-
-  const navItems = isAdmin
-    ? [...staffNavItems.slice(0, -1), ...adminOnlyNavItems, staffNavItems[staffNavItems.length - 1]]
-    : staffNavItems;
 
   const renderNavItem = (item: typeof staffNavItems[0]) => {
     const isActive = location.pathname === item.to;
     const link = (
       <Link
-        key={item.to}
-        to={item.to}
+        key={item.to} to={item.to}
         onClick={() => setMobileOpen(false)}
         className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200
           ${collapsed ? "justify-center" : ""}
@@ -83,7 +75,7 @@ const AppLayout = ({ children }: { children: ReactNode }) => {
           }`}
         style={isActive ? {
           background: "linear-gradient(90deg, hsl(145 70% 55% / 0.16), hsl(158 64% 45% / 0.08))",
-          boxShadow: "0 2px 8px hsl(145 70% 30% / 0.18)"
+          boxShadow: "0 2px 8px hsl(145 70% 30% / 0.18)",
         } : {}}
       >
         <item.icon className="w-4 h-4 shrink-0" style={isActive ? { color: "hsl(145,70%,58%)" } : {}} />
@@ -108,6 +100,7 @@ const AppLayout = ({ children }: { children: ReactNode }) => {
           onClick={() => setMobileOpen(false)} />
       )}
 
+      {/* Sidebar */}
       <aside className={`fixed lg:static inset-y-0 left-0 z-40 sidebar-glass flex flex-col transition-all duration-300
         ${collapsed ? "w-16" : "w-64"}
         ${mobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}`}>
@@ -131,11 +124,10 @@ const AppLayout = ({ children }: { children: ReactNode }) => {
           )}
         </div>
 
-        {/* Nav — staff items */}
+        {/* Nav */}
         <nav className="flex-1 px-2.5 py-4 space-y-0.5 overflow-y-auto">
           {staffNavItems.slice(0, -1).map(renderNavItem)}
 
-          {/* Admin-only section */}
           {isAdmin && (
             <>
               {!collapsed && (
@@ -148,8 +140,6 @@ const AppLayout = ({ children }: { children: ReactNode }) => {
               {adminOnlyNavItems.map(renderNavItem)}
             </>
           )}
-
-          {/* Profile always last */}
           {renderNavItem(staffNavItems[staffNavItems.length - 1])}
         </nav>
 
@@ -163,6 +153,35 @@ const AppLayout = ({ children }: { children: ReactNode }) => {
                 style={{ color: "hsl(145,70%,55%)", fontFamily: "Sora, sans-serif" }}>{role}</p>
             </div>
           )}
+
+          {/* Theme toggle */}
+          <Tooltip delayDuration={0}>
+            <TooltipTrigger asChild>
+              <button
+                onClick={toggleTheme}
+                className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium w-full transition-all duration-200 hover:bg-white/6
+                  ${collapsed ? "justify-center" : ""}`}
+                style={{ color: "hsl(150 15% 55%)" }}
+              >
+                {theme === "dark"
+                  ? <Sun className="w-4 h-4 shrink-0 text-amber-400" />
+                  : <Moon className="w-4 h-4 shrink-0 text-sky-400" />
+                }
+                {!collapsed && (
+                  <span style={{ fontFamily: "Plus Jakarta Sans, sans-serif" }}>
+                    {theme === "dark" ? "Light Mode" : "Dark Mode"}
+                  </span>
+                )}
+              </button>
+            </TooltipTrigger>
+            {collapsed && (
+              <TooltipContent side="right">
+                {theme === "dark" ? "Light Mode" : "Dark Mode"}
+              </TooltipContent>
+            )}
+          </Tooltip>
+
+          {/* Sign out */}
           <Tooltip delayDuration={0}>
             <TooltipTrigger asChild>
               <button onClick={handleLogout}
@@ -177,6 +196,8 @@ const AppLayout = ({ children }: { children: ReactNode }) => {
             </TooltipTrigger>
             {collapsed && <TooltipContent side="right">Sign Out</TooltipContent>}
           </Tooltip>
+
+          {/* Collapse toggle */}
           <button onClick={() => setCollapsed(!collapsed)}
             className="hidden lg:flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm w-full transition-all duration-200 justify-center hover:bg-white/6"
             style={{ color: "hsl(150 12% 46%)" }}>
@@ -192,6 +213,19 @@ const AppLayout = ({ children }: { children: ReactNode }) => {
             <Menu className="w-5 h-5" />
           </Button>
           <div className="flex-1" />
+
+          {/* Theme toggle in topbar (visible on mobile / when sidebar collapsed) */}
+          <button
+            onClick={toggleTheme}
+            className="w-8 h-8 rounded-xl flex items-center justify-center mr-2 transition-all hover:bg-muted"
+            title={theme === "dark" ? "Switch to Light Mode" : "Switch to Dark Mode"}
+          >
+            {theme === "dark"
+              ? <Sun className="w-4 h-4 text-amber-400" />
+              : <Moon className="w-4 h-4 text-sky-500" />
+            }
+          </button>
+
           <NotificationBell />
           <span className="text-xs font-bold text-muted-foreground capitalize ml-3 tracking-widest uppercase"
             style={{ fontFamily: "Plus Jakarta Sans, sans-serif" }}>

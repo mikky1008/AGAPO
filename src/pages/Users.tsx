@@ -10,14 +10,12 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { useState } from "react";
 
 const Users = () => {
+  // ── ALL hooks must come before any conditional return ──────
   const { isAdmin, isLoading: roleLoading } = useUserRole();
   const { user: currentUser } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [confirmRole, setConfirmRole] = useState<{ userId: string; name: string; newRole: "admin" | "staff" } | null>(null);
-
-  // Redirect non-admins
-  if (!roleLoading && !isAdmin) return <Navigate to="/dashboard" replace />;
 
   const { data: users = [], isLoading } = useQuery({
     queryKey: ["all_users"],
@@ -26,6 +24,7 @@ const Users = () => {
       if (error) throw error;
       return data as { user_id: string; email: string; full_name: string | null; role: string; is_active: boolean; created_at: string }[];
     },
+    // Only runs when confirmed admin — no wasted request for staff
     enabled: isAdmin,
   });
 
@@ -60,8 +59,20 @@ const Users = () => {
     onError: (e: any) => toast({ title: "Error", description: e.message, variant: "destructive" }),
   });
 
-  const adminCount = users.filter((u) => u.role === "admin").length;
-  const staffCount = users.filter((u) => u.role === "staff").length;
+  // ── Conditional returns AFTER all hooks ───────────────────
+  if (roleLoading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <p className="text-sm text-muted-foreground">Checking permissions…</p>
+      </div>
+    );
+  }
+
+  if (!isAdmin) return <Navigate to="/dashboard" replace />;
+
+  // ── Derived values ────────────────────────────────────────
+  const adminCount  = users.filter((u) => u.role === "admin").length;
+  const staffCount  = users.filter((u) => u.role === "staff").length;
   const activeCount = users.filter((u) => u.is_active).length;
 
   return (
@@ -142,7 +153,6 @@ const Users = () => {
                     </td>
                     <td className="p-3">
                       <div className="flex items-center gap-1">
-                        {/* Toggle role — disabled for self */}
                         {!isSelf && (
                           <Button
                             variant="outline"
@@ -158,7 +168,6 @@ const Users = () => {
                             {u.role === "admin" ? "Make staff" : "Make admin"}
                           </Button>
                         )}
-                        {/* Toggle active — disabled for self */}
                         {!isSelf && (
                           <Button
                             variant="ghost"

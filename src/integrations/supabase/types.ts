@@ -7,19 +7,62 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instantiate createClient with right options
-  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "14.4"
   }
   public: {
     Tables: {
+      ai_agent_logs: {
+        Row: {
+          id: string
+          senior_id: string
+          action: string
+          old_priority: string | null
+          new_priority: string | null
+          score: number | null
+          reasoning: string | null
+          triggered_by: string | null
+          triggered_at: string
+        }
+        Insert: {
+          id?: string
+          senior_id: string
+          action: string
+          old_priority?: string | null
+          new_priority?: string | null
+          score?: number | null
+          reasoning?: string | null
+          triggered_by?: string | null
+          triggered_at?: string
+        }
+        Update: {
+          id?: string
+          senior_id?: string
+          action?: string
+          old_priority?: string | null
+          new_priority?: string | null
+          score?: number | null
+          reasoning?: string | null
+          triggered_by?: string | null
+          triggered_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_agent_logs_senior_id_fkey"
+            columns: ["senior_id"]
+            isOneToOne: false
+            referencedRelation: "seniors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       assistance_records: {
         Row: {
           amount: number
           created_at: string
           created_by: string | null
           date_given: string
+          deleted_at: string | null
           description: string
           given_by: string
           id: string
@@ -33,6 +76,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           date_given?: string
+          deleted_at?: string | null
           description: string
           given_by: string
           id?: string
@@ -46,6 +90,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           date_given?: string
+          deleted_at?: string | null
           description?: string
           given_by?: string
           id?: string
@@ -115,6 +160,8 @@ export type Database = {
           id: string
           message: string
           read: boolean
+          senior_id: string | null
+          triggered_by: string | null
           type: string
           user_id: string
         }
@@ -123,6 +170,8 @@ export type Database = {
           id?: string
           message: string
           read?: boolean
+          senior_id?: string | null
+          triggered_by?: string | null
           type?: string
           user_id: string
         }
@@ -131,16 +180,27 @@ export type Database = {
           id?: string
           message?: string
           read?: boolean
+          senior_id?: string | null
+          triggered_by?: string | null
           type?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "notifications_senior_id_fkey"
+            columns: ["senior_id"]
+            isOneToOne: false
+            referencedRelation: "seniors"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
           created_at: string
           full_name: string | null
           id: string
+          is_active: boolean
           role: string | null
           updated_at: string
           user_id: string
@@ -149,6 +209,7 @@ export type Database = {
           created_at?: string
           full_name?: string | null
           id?: string
+          is_active?: boolean
           role?: string | null
           updated_at?: string
           user_id: string
@@ -157,6 +218,7 @@ export type Database = {
           created_at?: string
           full_name?: string | null
           id?: string
+          is_active?: boolean
           role?: string | null
           updated_at?: string
           user_id?: string
@@ -167,22 +229,28 @@ export type Database = {
         Row: {
           address: string
           age: number
+          agent_reasoning: string | null
           birth_date: string
           contact_number: string | null
           created_at: string
           created_by: string | null
+          deleted_at: string | null
           emergency_contact: string | null
           first_name: string
           gender: string
           health_status: string
           id: string
+          illness_severity: string | null
           illnesses: string[] | null
           income_level: string
+          last_aid_date: string | null
           last_name: string
           living_alone: boolean | null
           living_status: string
           photo: string | null
           priority_level: string | null
+          priority_score: number | null
+          priority_updated_at: string | null
           registered_date: string
           updated_at: string
           with_family: boolean | null
@@ -190,22 +258,28 @@ export type Database = {
         Insert: {
           address: string
           age: number
+          agent_reasoning?: string | null
           birth_date: string
           contact_number?: string | null
           created_at?: string
           created_by?: string | null
+          deleted_at?: string | null
           emergency_contact?: string | null
           first_name: string
           gender: string
           health_status?: string
           id?: string
+          illness_severity?: string | null
           illnesses?: string[] | null
           income_level?: string
+          last_aid_date?: string | null
           last_name: string
           living_alone?: boolean | null
           living_status?: string
           photo?: string | null
           priority_level?: string | null
+          priority_score?: number | null
+          priority_updated_at?: string | null
           registered_date?: string
           updated_at?: string
           with_family?: boolean | null
@@ -213,25 +287,67 @@ export type Database = {
         Update: {
           address?: string
           age?: number
+          agent_reasoning?: string | null
           birth_date?: string
           contact_number?: string | null
           created_at?: string
           created_by?: string | null
+          deleted_at?: string | null
           emergency_contact?: string | null
           first_name?: string
           gender?: string
           health_status?: string
           id?: string
+          illness_severity?: string | null
           illnesses?: string[] | null
           income_level?: string
+          last_aid_date?: string | null
           last_name?: string
           living_alone?: boolean | null
           living_status?: string
           photo?: string | null
           priority_level?: string | null
+          priority_score?: number | null
+          priority_updated_at?: string | null
           registered_date?: string
           updated_at?: string
           with_family?: boolean | null
+        }
+        Relationships: []
+      }
+      system_logs: {
+        Row: {
+          id: string
+          performed_by: string | null
+          action: string
+          table_name: string
+          record_id: string | null
+          old_data: Json | null
+          new_data: Json | null
+          ip_address: string | null
+          logged_at: string
+        }
+        Insert: {
+          id?: string
+          performed_by?: string | null
+          action: string
+          table_name: string
+          record_id?: string | null
+          old_data?: Json | null
+          new_data?: Json | null
+          ip_address?: string | null
+          logged_at?: string
+        }
+        Update: {
+          id?: string
+          performed_by?: string | null
+          action?: string
+          table_name?: string
+          record_id?: string | null
+          old_data?: Json | null
+          new_data?: Json | null
+          ip_address?: string | null
+          logged_at?: string
         }
         Relationships: []
       }
@@ -261,6 +377,16 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      apply_ai_priority: {
+        Args: {
+          _senior_id: string
+          _score: number
+          _level: string
+          _reasoning: string
+          _triggered_by?: string
+        }
+        Returns: undefined
+      }
       get_user_role: { Args: { _user_id: string }; Returns: string }
       has_role: {
         Args: {
@@ -268,6 +394,40 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      list_all_users: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          user_id: string
+          email: string
+          full_name: string | null
+          role: string
+          is_active: boolean
+          created_at: string
+        }[]
+      }
+      restore_senior: {
+        Args: { _senior_id: string }
+        Returns: undefined
+      }
+      set_user_role: {
+        Args: {
+          _target_user_id: string
+          _new_role: Database["public"]["Enums"]["app_role"]
+        }
+        Returns: undefined
+      }
+      soft_delete_assistance: {
+        Args: { _record_id: string }
+        Returns: undefined
+      }
+      soft_delete_senior: {
+        Args: { _senior_id: string }
+        Returns: undefined
+      }
+      toggle_user_active: {
+        Args: { _target_user_id: string; _is_active: boolean }
+        Returns: undefined
       }
     }
     Enums: {
