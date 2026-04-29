@@ -165,7 +165,7 @@ const Login = () => {
   const [signupEmail,    setSignupEmail]    = useState("");
   const [signupPassword, setSignupPassword] = useState("");
   const [confirmPw,      setConfirmPw]      = useState("");
-  const [selectedRole,   setSelectedRole]   = useState<"staff"|"admin">("staff");
+  const selectedRole = "admin" as const;
   const [adminCode,      setAdminCode]      = useState("");
   const [showSignupPw,   setShowSignupPw]   = useState(false);
   const [showConfirmPw,  setShowConfirmPw]  = useState(false);
@@ -418,46 +418,28 @@ const Login = () => {
                   <FieldError msg={signupErrs.confirmPw} />
                 </div>
 
-                {/* Role selector */}
-                <div className="grid grid-cols-2 gap-2">
-                  {(["staff", "admin"] as const).map(r => (
-                    <button key={r} type="button" onClick={() => { setSelectedRole(r); setAdminCode(""); }}
-                      className="py-2.5 rounded-xl text-sm font-semibold transition-all"
-                      style={{
-                        background: selectedRole === r ? "var(--gradient-button)" : "rgba(255,255,255,0.06)",
-                        border: `1px solid ${selectedRole === r ? "transparent" : "rgba(255,255,255,0.10)"}`,
-                        color: selectedRole === r ? "#fff" : "rgba(255,255,255,0.50)",
-                        boxShadow: selectedRole === r ? "var(--shadow-button)" : "none",
-                      }}>
-                      {r === "staff" ? "Barangay Staff" : "Administrator"}
-                    </button>
-                  ))}
+                {/* Admin code — always required, only admins can self-register */}
+                <div className="rounded-xl p-3.5 space-y-2"
+                  style={{
+                    background: "rgba(255,255,255,0.04)",
+                    border: `1px solid ${signupErrs.adminCode ? "rgba(248,113,113,0.50)" : "rgba(255,255,255,0.10)"}`,
+                  }}>
+                  <div className="flex items-center gap-2 text-sm font-semibold text-white">
+                    <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
+                    Admin Verification Code
+                  </div>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40 pointer-events-none z-10" />
+                    <input type="password" placeholder="Enter admin code" value={adminCode}
+                      onChange={e => setAdminCode(e.target.value)}
+                      className={`agapo-input-glass ${signupErrs.adminCode ? "has-error" : ""}`} />
+                  </div>
+                  <FieldError msg={signupErrs.adminCode} />
+                  <p className="text-[11px] text-white/35">Only administrators can self-register. Staff accounts are created by an admin.</p>
                 </div>
 
-                {/* Admin code */}
-                {selectedRole === "admin" && (
-                  <div className="rounded-xl p-3.5 space-y-2"
-                    style={{
-                      background: "rgba(255,255,255,0.04)",
-                      border: `1px solid ${signupErrs.adminCode ? "rgba(248,113,113,0.50)" : "rgba(255,255,255,0.10)"}`,
-                    }}>
-                    <div className="flex items-center gap-2 text-sm font-semibold text-white">
-                      <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
-                      Admin Verification Code
-                    </div>
-                    <div className="relative">
-                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40 pointer-events-none z-10" />
-                      <input type="password" placeholder="Enter admin code" value={adminCode}
-                        onChange={e => setAdminCode(e.target.value)}
-                        className={`agapo-input-glass ${signupErrs.adminCode ? "has-error" : ""}`} />
-                    </div>
-                    <FieldError msg={signupErrs.adminCode} />
-                    <p className="text-[11px] text-white/35">Contact your barangay administrator to obtain this code.</p>
-                  </div>
-                )}
-
                 <PrimaryBtn type="submit" disabled={signingUp}>
-                  {signingUp ? "Creating account…" : `Create ${selectedRole === "admin" ? "Admin" : "Staff"} Account`}
+                  {signingUp ? "Creating account…" : "Create Admin Account"}
                 </PrimaryBtn>
               </form>
             </TabsContent>
