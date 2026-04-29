@@ -139,12 +139,12 @@ const Users = () => {
                       <p className="text-xs text-muted-foreground">{u.email}</p>
                     </td>
                     <td className="p-3">
-                      <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${u.role === "admin" ? "bg-amber-500/10 text-amber-700" : "bg-primary/10 text-primary"}`}>
+                      <span className={`text-xs px-2 py-0.5 rounded-full font-medium border ${u.role === "admin" ? "bg-amber-500/15 text-amber-400 border-amber-500/30" : "bg-sky-500/15 text-sky-400 border-sky-500/30"}`}>
                         {u.role}
                       </span>
                     </td>
                     <td className="p-3">
-                      <span className={`text-xs px-2 py-0.5 rounded-full ${u.is_active ? "bg-emerald-500/10 text-emerald-700" : "bg-muted text-muted-foreground"}`}>
+                      <span className={`text-xs px-2 py-0.5 rounded-full border ${u.is_active ? "bg-emerald-500/15 text-emerald-400 border-emerald-500/30" : "bg-muted text-muted-foreground border-border"}`}>
                         {u.is_active ? "Active" : "Inactive"}
                       </span>
                     </td>

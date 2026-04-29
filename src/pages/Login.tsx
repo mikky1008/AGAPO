@@ -126,14 +126,15 @@ const FieldError = ({ msg }: { msg?: string }) =>
   msg ? <p className="text-xs text-red-300/85 mt-1 pl-1">{msg}</p> : null;
 
 const PrimaryBtn = ({
-  children, type = "button", disabled,
+  children, type = "button", disabled, onClick,
 }: {
   children: React.ReactNode;
   type?: "button" | "submit";
   disabled?: boolean;
+  onClick?: () => void;
 }) => (
   <button
-    type={type} disabled={disabled}
+    type={type} disabled={disabled} onClick={onClick}
     className="w-full py-3 rounded-[14px] font-bold text-white transition-all hover:brightness-110 active:scale-[0.98] disabled:opacity-50"
     style={{ background: "var(--gradient-button)", boxShadow: "var(--shadow-button)" }}
   >

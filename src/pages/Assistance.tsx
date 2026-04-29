@@ -267,7 +267,7 @@ const Assistance = () => {
                   <td className="p-3 text-sm font-medium text-foreground">₱{Number(r.amount).toLocaleString()}</td>
                   <td className="p-3 text-sm text-muted-foreground hidden md:table-cell">{r.date_given}</td>
                   <td className="p-3">
-                    <span className={`text-xs px-2 py-0.5 rounded-full ${r.status === "Completed" ? "bg-primary/10 text-primary" : "bg-warning/10 text-warning"}`}>
+                    <span className={`text-xs px-2 py-0.5 rounded-full border ${r.status === "Completed" ? "bg-emerald-500/15 text-emerald-400 border-emerald-500/30" : "bg-amber-500/15 text-amber-400 border-amber-500/30"}`}>
                       {r.status}
                     </span>
                   </td>

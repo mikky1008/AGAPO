@@ -5,10 +5,10 @@ import { Navigate } from "react-router-dom";
 import { Bot, TrendingUp, TrendingDown, Minus, Clock } from "lucide-react";
 
 const levelColor = (level: string | null) => {
-  if (level === "High") return "bg-destructive/10 text-priority-high";
-  if (level === "Medium") return "bg-warning/10 text-warning";
-  if (level === "Low") return "bg-primary/10 text-primary";
-  return "bg-muted text-muted-foreground";
+  if (level === "High") return "bg-red-500/15 text-red-400 border border-red-500/30";
+  if (level === "Medium") return "bg-amber-500/15 text-amber-400 border border-amber-500/30";
+  if (level === "Low") return "bg-emerald-500/15 text-emerald-400 border border-emerald-500/30";
+  return "bg-muted text-muted-foreground border border-border";
 };
 
 const ChangeIcon = ({ from, to }: { from: string | null; to: string | null }) => {
@@ -66,10 +66,10 @@ const AgentLogs = () => {
   if (!isAdmin) return <Navigate to="/dashboard" replace />;
 
   const actionBadge = (action: string) => {
-    if (action === "INSERT") return "bg-primary/10 text-primary";
-    if (action === "UPDATE") return "bg-warning/10 text-warning";
-    if (action === "DELETE") return "bg-destructive/10 text-priority-high";
-    return "bg-muted text-muted-foreground";
+    if (action === "INSERT") return "bg-emerald-500/15 text-emerald-400 border border-emerald-500/30";
+    if (action === "UPDATE") return "bg-amber-500/15 text-amber-400 border border-amber-500/30";
+    if (action === "DELETE") return "bg-red-500/15 text-red-400 border border-red-500/30";
+    return "bg-muted text-muted-foreground border border-border";
   };
 
   return (
@@ -137,7 +137,7 @@ const AgentLogs = () => {
                         {log.reasoning ?? "—"}
                       </td>
                       <td className="p-3 hidden sm:table-cell">
-                        <span className="text-xs px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-700">
+                        <span className="text-xs px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-400 border border-amber-500/30">
                           {log.triggered_by ?? "ai_agent"}
                         </span>
                       </td>

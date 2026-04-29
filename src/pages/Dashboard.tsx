@@ -70,7 +70,7 @@ const Dashboard = () => {
           <div className="space-y-1">
             {recentRecords.length === 0 && <p className="text-sm text-muted-foreground py-4 text-center" style={{ fontFamily: "Plus Jakarta Sans, sans-serif" }}>No records yet.</p>}
             {recentRecords.map((record) => (
-              <div key={record.id} className="flex items-center justify-between py-2.5 px-3 rounded-xl hover:bg-white/62 transition-colors">
+              <div key={record.id} className="flex items-center justify-between py-2.5 px-3 rounded-xl hover:bg-muted/60 transition-colors">
                 <div>
                   <p className="text-sm font-semibold text-foreground" style={{ fontFamily: "Plus Jakarta Sans, sans-serif" }}>
                     {record.seniors?.first_name} {record.seniors?.last_name}
@@ -81,7 +81,7 @@ const Dashboard = () => {
                 </div>
                 <div className="text-right shrink-0 ml-4">
                   <p className="text-sm font-bold text-foreground" style={{ fontFamily: "Sora, sans-serif" }}>₱{Number(record.amount).toLocaleString()}</p>
-                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${record.status === "Completed" ? "bg-emerald-100 text-emerald-700 border border-emerald-200" : "bg-amber-100 text-amber-700 border border-amber-200"}`}
+                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${record.status === "Completed" ? "bg-emerald-500/15 text-emerald-400 border-emerald-500/30" : "bg-amber-500/15 text-amber-400 border-amber-500/30"}`}
                     style={{ fontFamily: "Plus Jakarta Sans, sans-serif" }}>
                     {record.status}
                   </span>
@@ -94,7 +94,7 @@ const Dashboard = () => {
         <div className="glass-card p-6">
           <div className="flex items-center justify-between mb-5">
             <h2 className="text-base font-semibold text-foreground" style={{ fontFamily: "Sora, sans-serif" }}>Priority Seniors</h2>
-            <span className="text-[10px] font-bold text-rose-600 bg-rose-100 border border-rose-200 px-2.5 py-1 rounded-lg uppercase tracking-wider"
+            <span className="text-[10px] font-bold text-red-400 bg-red-500/15 border border-red-500/30 px-2.5 py-1 rounded-lg uppercase tracking-wider"
               style={{ fontFamily: "Plus Jakarta Sans, sans-serif" }}>High Priority</span>
           </div>
           <div className="space-y-1">
@@ -102,12 +102,12 @@ const Dashboard = () => {
               <p className="text-sm text-muted-foreground py-4 text-center" style={{ fontFamily: "Plus Jakarta Sans, sans-serif" }}>No high priority seniors</p>
             )}
             {seniors.filter((s) => s.priority_level === "High").map((senior) => (
-              <div key={senior.id} className="flex items-center justify-between py-2.5 px-3 rounded-xl hover:bg-white/62 transition-colors">
+              <div key={senior.id} className="flex items-center justify-between py-2.5 px-3 rounded-xl hover:bg-muted/60 transition-colors">
                 <div>
                   <p className="text-sm font-semibold text-foreground" style={{ fontFamily: "Plus Jakarta Sans, sans-serif" }}>{senior.first_name} {senior.last_name}</p>
                   <p className="text-xs text-muted-foreground mt-0.5" style={{ fontFamily: "Plus Jakarta Sans, sans-serif" }}>Age {senior.age} · {senior.income_level} income</p>
                 </div>
-                <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-rose-100 text-rose-700 border border-rose-200 shrink-0 ml-4"
+                <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-red-500/15 text-red-400 border border-red-500/30 shrink-0 ml-4"
                   style={{ fontFamily: "Plus Jakarta Sans, sans-serif" }}>Critical</span>
               </div>
             ))}

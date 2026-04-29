@@ -125,9 +125,9 @@ const Seniors = () => {
 
   const priorityColor = (level: string) => {
     switch (level) {
-      case "High": return "bg-destructive/10 text-priority-high border-0";
-      case "Medium": return "bg-warning/10 text-warning border-0";
-      default: return "bg-primary/10 text-primary border-0";
+      case "High": return "bg-red-500/15 text-red-400 border-red-500/30";
+      case "Medium": return "bg-amber-500/15 text-amber-400 border-amber-500/30";
+      default: return "bg-emerald-500/15 text-emerald-400 border-emerald-500/30";
     }
   };
 
@@ -175,6 +175,7 @@ const Seniors = () => {
       emergencyContact: editSenior.emergency_contact || "",
       illnesses: editSenior.illnesses?.join(", ") || "",
       livingStatus: editSenior.living_status || (editSenior.living_alone ? "Living Alone" : "With Family"),
+      maritalStatus: editSenior.marital_status || "Single",
       incomeLevel: editSenior.income_level || "Low",
     };
   };
@@ -247,7 +248,7 @@ const Seniors = () => {
                     <td className="p-3 text-sm text-muted-foreground">{currentAge}</td>
                     <td className="p-3 text-sm text-muted-foreground hidden sm:table-cell">{senior.address}</td>
                     <td className="p-3">
-                      <span className={`text-xs px-2 py-0.5 rounded-full ${illnessCount === 0 ? "bg-primary/10 text-primary" : illnessCount === 1 ? "bg-warning/10 text-warning" : "bg-destructive/10 text-priority-high"}`}>
+                      <span className={`text-xs px-2 py-0.5 rounded-full border ${illnessCount === 0 ? "bg-emerald-500/15 text-emerald-400 border-emerald-500/30" : illnessCount === 1 ? "bg-amber-500/15 text-amber-400 border-amber-500/30" : "bg-red-500/15 text-red-400 border-red-500/30"}`}>
                         {illnessCount === 0 ? "None" : `${illnessCount} illness${illnessCount > 1 ? "es" : ""}`}
                       </span>
                     </td>

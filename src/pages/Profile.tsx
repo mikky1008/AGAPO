@@ -211,7 +211,7 @@ const Profile = () => {
             <div>
               <div className="flex items-center gap-2 mb-2">
                 <h2 className="text-xl font-bold text-foreground">{displayName}</h2>
-                <span className="inline-flex items-center gap-1 bg-primary/10 text-primary px-2.5 py-0.5 rounded-full text-xs font-medium">
+                <span className="inline-flex items-center gap-1 bg-amber-500/15 text-amber-400 border border-amber-500/30 px-2.5 py-0.5 rounded-full text-xs font-medium">
                   <BadgeCheck className="w-3 h-3" />
                   {displayRole}
                 </span>
