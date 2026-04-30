@@ -39,6 +39,9 @@ const WELCOME =
   `• Recommend government assistance programs\n\n` +
   `What do you need?`;
 
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string;
+const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string;
+
 const ChatAgent = ({ context }: ChatAgentProps) => {
   const [open,     setOpen]     = useState(false);
   const [messages, setMessages] = useState<Message[]>([
@@ -74,16 +77,26 @@ const ChatAgent = ({ context }: ChatAgentProps) => {
               : m.text,
         }));
 
+      // Get the user's JWT for auth — falls back to publishable key
       const { data: { session } } = await supabase.auth.getSession();
+      const authToken = session?.access_token ?? SUPABASE_KEY;
 
-      const { data, error: fnError } = await supabase.functions.invoke("chat-agent", {
-        body: { messages: history },
-        headers: session?.access_token
-          ? { Authorization: `Bearer ${session.access_token}` }
-          : undefined,
+      const res = await fetch(`${SUPABASE_URL}/functions/v1/chat-agent`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${authToken}`,
+          "apikey": SUPABASE_KEY,
+        },
+        body: JSON.stringify({ messages: history }),
       });
 
-      if (fnError) throw new Error(fnError.message);
+      if (!res.ok) {
+        const errText = await res.text();
+        throw new Error(`Function error (${res.status}): ${errText}`);
+      }
+
+      const data = await res.json();
       if (!data?.reply) throw new Error("Empty response from agent.");
 
       setMessages((prev) => [
@@ -185,7 +198,7 @@ const ChatAgent = ({ context }: ChatAgentProps) => {
             <div className="px-3 py-1.5 bg-destructive/10 border-t border-destructive/20 flex items-center gap-2 shrink-0">
               <AlertCircle className="w-3 h-3 text-destructive shrink-0" />
               <p className="text-[10px] text-destructive leading-tight">
-                Agent error — ensure chat-agent function is deployed and GROQ_API_KEY is set.
+                Agent error — check that GROQ_API_KEY secret is set in Supabase.
               </p>
             </div>
           )}
