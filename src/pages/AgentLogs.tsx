@@ -44,10 +44,34 @@ const AgentLogs = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("system_logs")
-        .select("*")
+        .select("*, profiles!system_logs_performed_by_fkey(full_name, role)")
         .order("logged_at", { ascending: false })
         .limit(100);
-      if (error) throw error;
+      if (error) {
+        // Fallback: if FK join fails, try matching performed_by to profiles.user_id manually
+        const { data: logsData, error: logsError } = await supabase
+          .from("system_logs")
+          .select("*")
+          .order("logged_at", { ascending: false })
+          .limit(100);
+        if (logsError) throw logsError;
+
+        const userIds = [...new Set(logsData.map((l: any) => l.performed_by).filter(Boolean))];
+        let profileMap: Record<string, { full_name: string | null; role: string | null }> = {};
+        if (userIds.length > 0) {
+          const { data: profilesData } = await supabase
+            .from("profiles")
+            .select("user_id, full_name, role")
+            .in("user_id", userIds);
+          if (profilesData) {
+            profileMap = Object.fromEntries(profilesData.map((p: any) => [p.user_id, p]));
+          }
+        }
+        return logsData.map((log: any) => ({
+          ...log,
+          profiles: profileMap[log.performed_by] ?? null,
+        }));
+      }
       return data;
     },
     enabled: isAdmin,
@@ -179,6 +203,7 @@ const AgentLogs = () => {
                     <th className="text-left p-3 text-xs font-medium text-muted-foreground uppercase">Action</th>
                     <th className="text-left p-3 text-xs font-medium text-muted-foreground uppercase">Table</th>
                     <th className="text-left p-3 text-xs font-medium text-muted-foreground uppercase hidden sm:table-cell">Record ID</th>
+                    <th className="text-left p-3 text-xs font-medium text-muted-foreground uppercase">Performed By</th>
                     <th className="text-left p-3 text-xs font-medium text-muted-foreground uppercase">When</th>
                   </tr>
                 </thead>
@@ -193,6 +218,25 @@ const AgentLogs = () => {
                       <td className="p-3 text-sm text-muted-foreground font-mono">{log.table_name}</td>
                       <td className="p-3 text-xs text-muted-foreground font-mono hidden sm:table-cell truncate max-w-[160px]">
                         {log.record_id ?? "—"}
+                      </td>
+                      <td className="p-3">
+                        {log.profiles ? (
+                          <div className="flex flex-col gap-0.5">
+                            <span className="text-sm text-foreground font-medium leading-tight">
+                              {log.profiles.full_name ?? "Unknown"}
+                            </span>
+                            {log.profiles.role && (
+                              <span className="text-xs px-1.5 py-0.5 rounded-full w-fit capitalize
+                                bg-primary/10 text-primary border border-primary/20">
+                                {log.profiles.role}
+                              </span>
+                            )}
+                          </div>
+                        ) : (
+                          <span className="text-xs text-muted-foreground italic">
+                            {log.performed_by ? "Unknown user" : "System"}
+                          </span>
+                        )}
                       </td>
                       <td className="p-3 text-xs text-muted-foreground whitespace-nowrap">
                         <div className="flex items-center gap-1">
