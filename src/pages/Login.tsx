@@ -136,34 +136,38 @@ const PrimaryBtn = ({
 );
 
 /**
- * Background: Unsplash luxury interior photo (Roberto Nickson)
- * Multi-layer overlay for drama + brand crimson palette
+ * Background: Filipino senior citizens in a warm, community setting
+ * Multi-layer overlay for drama + brand crimson/golden palette
  */
 const PageWrapper = ({ children }: { children: React.ReactNode }) => (
   <div
     className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden"
     style={{
       backgroundImage:
-        "url('https://images.unsplash.com/photo-1776653096575-0898bcd8b9e9?w=1920&q=90&fit=crop&crop=center')",
+        "url('https://images.unsplash.com/photo-1537735319956-df7db4b6a4e9?w=1920&q=90&fit=crop&crop=faces,center')",
       backgroundSize: "cover",
-      backgroundPosition: "center",
+      backgroundPosition: "center 35%",
     }}
   >
-    {/* Layer 1: Deep crimson tint */}
+    {/* Layer 1: Warm golden-crimson Philippine sunset tint */}
     <div className="absolute inset-0" style={{
-      background: "linear-gradient(135deg, rgba(60,0,0,0.72) 0%, rgba(20,0,0,0.50) 50%, rgba(50,0,0,0.78) 100%)",
+      background: "linear-gradient(135deg, rgba(80,20,5,0.75) 0%, rgba(40,10,0,0.48) 45%, rgba(70,25,0,0.80) 100%)",
     }} />
-    {/* Layer 2: Bottom-up dark gradient */}
+    {/* Layer 2: Bottom-up warm dark gradient */}
     <div className="absolute inset-0" style={{
-      background: "linear-gradient(to top, rgba(0,0,0,0.55) 0%, transparent 55%)",
+      background: "linear-gradient(to top, rgba(10,0,0,0.65) 0%, rgba(60,20,0,0.20) 40%, transparent 65%)",
     }} />
     {/* Layer 3: Top cinematic shadow */}
     <div className="absolute inset-0" style={{
-      background: "linear-gradient(to bottom, rgba(0,0,0,0.35) 0%, transparent 30%)",
+      background: "linear-gradient(to bottom, rgba(0,0,0,0.40) 0%, transparent 30%)",
     }} />
-    {/* Layer 4: Edge vignette */}
+    {/* Layer 4: Warm amber edge vignette */}
     <div className="absolute inset-0" style={{
-      background: "radial-gradient(ellipse 75% 75% at 50% 50%, transparent 40%, rgba(0,0,0,0.60) 100%)",
+      background: "radial-gradient(ellipse 80% 80% at 50% 50%, transparent 35%, rgba(20,5,0,0.65) 100%)",
+    }} />
+    {/* Layer 5: Subtle warm golden top-left glow */}
+    <div className="absolute inset-0" style={{
+      background: "radial-gradient(ellipse 50% 40% at 15% 10%, rgba(200,120,20,0.12) 0%, transparent 70%)",
     }} />
     <div className="relative z-10 w-full flex justify-center">{children}</div>
   </div>
