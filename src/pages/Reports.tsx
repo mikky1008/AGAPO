@@ -57,7 +57,7 @@ const Reports = () => {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `agapo_${type}_report.csv`;
+    a.download = `goldenreg_${type}_report.csv`;
     a.click();
     URL.revokeObjectURL(url);
     toast({ title: "Report Downloaded", description: `${type} report saved as CSV.` });
@@ -68,7 +68,7 @@ const Reports = () => {
     const today = new Date().toLocaleDateString();
 
     doc.setFontSize(16);
-    doc.text("AGAPO - Barangay San Francisco", 14, 15);
+    doc.text("GoldenReg - Barangay San Francisco", 14, 15);
     doc.setFontSize(10);
     doc.text(`Generated: ${today}`, 14, 22);
 
@@ -140,7 +140,7 @@ const Reports = () => {
       });
     }
 
-    doc.save(`agapo_${type}_report.pdf`);
+    doc.save(`goldenreg_${type}_report.pdf`);
     toast({ title: "Report Downloaded", description: `${type} report saved as PDF.` });
   };
 

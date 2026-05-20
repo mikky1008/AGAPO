@@ -409,7 +409,7 @@ const Profile = () => {
               <div>
                 <h3 className="text-sm font-semibold text-foreground mb-2">Terms of Use</h3>
                 <div className="bg-muted rounded-lg p-3 text-xs text-muted-foreground space-y-2 max-h-36 overflow-y-auto">
-                  <p>AGAPO is provided exclusively for authorized personnel of Barangay San Francisco, Mainit, Surigao del Norte.</p>
+                  <p>GoldenReg is provided exclusively for authorized personnel of Barangay San Francisco, Mainit, Surigao del Norte.</p>
                   <p>Users must use the system solely for managing senior citizen records and assistance programs. Unauthorized access or data modification is strictly prohibited.</p>
                   <p>All actions are logged and monitored. Misuse may result in revocation of access and appropriate administrative action.</p>
                 </div>

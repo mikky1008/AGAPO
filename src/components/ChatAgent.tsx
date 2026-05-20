@@ -31,7 +31,7 @@ const QUICK_CHIPS = [
 ];
 
 const WELCOME =
-  `Hello! I'm AGAPO Assistant 🤖\n\n` +
+  `Hello! I'm GoldenReg Assistant 🤖\n\n` +
   `I can help you:\n` +
   `• Check senior profiles & priority levels\n` +
   `• Update priorities — e.g. "Set Juan dela Cruz to High priority"\n` +
@@ -151,7 +151,7 @@ const ChatAgent = ({ context }: ChatAgentProps) => {
               <Bot className="w-4 h-4 text-primary-foreground" />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold text-primary-foreground leading-none">AGAPO Assistant</p>
+              <p className="text-sm font-semibold text-primary-foreground leading-none">GoldenReg Assistant</p>
               <p className="text-[10px] text-primary-foreground/55 mt-0.5">Groq · Llama 3.3 70B · Tool-enabled</p>
             </div>
             <button onClick={clearChat} className="text-[10px] text-primary-foreground/50 hover:text-primary-foreground transition-colors mr-2 shrink-0">
@@ -237,7 +237,7 @@ const ChatAgent = ({ context }: ChatAgentProps) => {
       {/* Floating bubble */}
       <button onClick={() => setOpen((v) => !v)}
         className="w-14 h-14 rounded-full bg-primary flex items-center justify-center hover:opacity-90 transition-all active:scale-95 shadow-lg"
-        title="AGAPO Assistant">
+        title="GoldenReg Assistant">
         {open ? <X className="w-5 h-5 text-primary-foreground" /> : <MessageCircle className="w-6 h-6 text-primary-foreground" />}
       </button>
     </div>

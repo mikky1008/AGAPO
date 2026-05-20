@@ -2,7 +2,7 @@ import { ReactNode, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard, Users, HandHeart, ShieldAlert, FileText, LogOut,
-  Menu, PanelLeftClose, PanelLeft, User, Bot, UsersRound, Sun, Moon,
+  Menu, PanelLeftClose, PanelLeft, User, Bot, UsersRound, Sun, Moon, Star,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -33,20 +33,20 @@ const BackgroundArt = () => (
     xmlns="http://www.w3.org/2000/svg" aria-hidden="true"
     style={{ opacity: 0.04 }}
   >
-    <ellipse cx="120" cy="335" rx="38" ry="12" fill="hsl(158,55%,32%)"/>
-    <rect x="104" y="252" width="32" height="74" rx="16" fill="hsl(158,55%,32%)"/>
-    <circle cx="120" cy="236" r="20" fill="hsl(158,55%,32%)"/>
-    <line x1="136" y1="320" x2="154" y2="342" stroke="hsl(158,55%,32%)" strokeWidth="5" strokeLinecap="round"/>
-    <line x1="154" y1="342" x2="163" y2="342" stroke="hsl(158,55%,32%)" strokeWidth="5" strokeLinecap="round"/>
-    <path d="M104 272 Q82 290 76 310" stroke="hsl(158,55%,32%)" strokeWidth="7" strokeLinecap="round" fill="none"/>
-    <path d="M136 272 Q154 286 148 314" stroke="hsl(158,55%,32%)" strokeWidth="7" strokeLinecap="round" fill="none"/>
-    <path d="M268 168 C268 159 255 151 249 162 C243 151 230 159 230 168 C230 181 249 194 249 194 C249 194 268 181 268 168Z" fill="hsl(145,60%,38%)"/>
-    <rect x="308" y="248" width="36" height="82" rx="18" fill="hsl(152,52%,35%)"/>
-    <circle cx="326" cy="232" r="22" fill="hsl(152,52%,35%)"/>
-    <path d="M308 270 Q280 254 266 264" stroke="hsl(152,52%,35%)" strokeWidth="8" strokeLinecap="round" fill="none"/>
-    <path d="M344 270 Q372 254 386 264" stroke="hsl(152,52%,35%)" strokeWidth="8" strokeLinecap="round" fill="none"/>
-    <path d="M158 306 Q200 260 258 288" stroke="hsl(145,60%,38%)" strokeWidth="2.5" strokeDasharray="7 5" strokeLinecap="round"/>
-    <circle cx="326" cy="232" r="180" stroke="hsl(158,55%,32%)" strokeWidth="1.2" fill="none" strokeDasharray="10 7"/>
+    <ellipse cx="120" cy="335" rx="38" ry="12" fill="hsl(6,65%,32%)"/>
+    <rect x="104" y="252" width="32" height="74" rx="16" fill="hsl(6,65%,32%)"/>
+    <circle cx="120" cy="236" r="20" fill="hsl(6,65%,32%)"/>
+    <line x1="136" y1="320" x2="154" y2="342" stroke="hsl(6,65%,32%)" strokeWidth="5" strokeLinecap="round"/>
+    <line x1="154" y1="342" x2="163" y2="342" stroke="hsl(6,65%,32%)" strokeWidth="5" strokeLinecap="round"/>
+    <path d="M104 272 Q82 290 76 310" stroke="hsl(6,65%,32%)" strokeWidth="7" strokeLinecap="round" fill="none"/>
+    <path d="M136 272 Q154 286 148 314" stroke="hsl(6,65%,32%)" strokeWidth="7" strokeLinecap="round" fill="none"/>
+    <path d="M268 168 C268 159 255 151 249 162 C243 151 230 159 230 168 C230 181 249 194 249 194 C249 194 268 181 268 168Z" fill="hsl(6,65%,42%)"/>
+    <rect x="308" y="248" width="36" height="82" rx="18" fill="hsl(6,60%,35%)"/>
+    <circle cx="326" cy="232" r="22" fill="hsl(6,60%,35%)"/>
+    <path d="M308 270 Q280 254 266 264" stroke="hsl(6,60%,35%)" strokeWidth="8" strokeLinecap="round" fill="none"/>
+    <path d="M344 270 Q372 254 386 264" stroke="hsl(6,60%,35%)" strokeWidth="8" strokeLinecap="round" fill="none"/>
+    <path d="M158 306 Q200 260 258 288" stroke="hsl(6,65%,42%)" strokeWidth="2.5" strokeDasharray="7 5" strokeLinecap="round"/>
+    <circle cx="326" cy="232" r="180" stroke="hsl(6,65%,32%)" strokeWidth="1.2" fill="none" strokeDasharray="10 7"/>
   </svg>
 );
 
@@ -70,15 +70,15 @@ const AppLayout = ({ children }: { children: ReactNode }) => {
         className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200
           ${collapsed ? "justify-center" : ""}
           ${isActive
-            ? "text-[hsl(145,70%,55%)] border border-[hsl(145,70%,55%)/25%]"
-            : "text-[hsl(150,15%,62%)] hover:text-[hsl(150,20%,88%)] hover:bg-white/6"
+            ? "text-[hsl(6,65%,58%)] border border-[hsl(6,65%,58%)/25%]"
+            : "text-[hsl(0,12%,62%)] hover:text-[hsl(0,15%,88%)] hover:bg-white/6"
           }`}
         style={isActive ? {
-          background: "linear-gradient(90deg, hsl(145 70% 55% / 0.16), hsl(158 64% 45% / 0.08))",
-          boxShadow: "0 2px 8px hsl(145 70% 30% / 0.18)",
+          background: "linear-gradient(90deg, hsl(6 65% 55% / 0.16), hsl(6 65% 45% / 0.08))",
+          boxShadow: "0 2px 8px hsl(6 65% 30% / 0.18)",
         } : {}}
       >
-        <item.icon className="w-4 h-4 shrink-0" style={isActive ? { color: "hsl(145,70%,58%)" } : {}} />
+        <item.icon className="w-4 h-4 shrink-0" style={isActive ? { color: "hsl(38,85%,58%)" } : {}} />
         {!collapsed && <span style={{ fontFamily: "Plus Jakarta Sans, sans-serif" }}>{item.label}</span>}
       </Link>
     );
@@ -109,15 +109,15 @@ const AppLayout = ({ children }: { children: ReactNode }) => {
         <div className={`flex items-center border-b border-white/8 shrink-0
           ${collapsed ? "justify-center p-4" : "gap-3 px-5 py-5"}`}>
           <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
-            style={{ background: "linear-gradient(135deg, hsl(145 70% 48%), hsl(158 64% 35%))", boxShadow: "0 4px 12px hsl(145 70% 20% / 0.50)" }}>
-            <img src="/favicon.ico" className="w-9 h-9 rounded-xl object-cover" />
+            style={{ background: "linear-gradient(135deg, #8B1A10, #C9933A)", boxShadow: "0 4px 12px rgba(139,26,16,0.50)" }}>
+            <Star className="w-5 h-5 text-white drop-shadow" fill="white" />
           </div>
           {!collapsed && (
             <div>
               <h1 className="text-[15px] font-bold tracking-wide"
-                style={{ fontFamily: "Sora, sans-serif", color: "hsl(150 20% 92%)" }}>AGAPO</h1>
+                style={{ fontFamily: "Sora, sans-serif", color: "hsl(0 15% 92%)" }}>GoldenReg</h1>
               <p className="text-[10px] font-semibold tracking-widest uppercase"
-                style={{ color: "hsl(150 15% 55%)", fontFamily: "Plus Jakarta Sans, sans-serif" }}>
+                style={{ color: "hsl(0 12% 55%)", fontFamily: "Plus Jakarta Sans, sans-serif" }}>
                 Brgy. San Francisco
               </p>
             </div>
@@ -132,7 +132,7 @@ const AppLayout = ({ children }: { children: ReactNode }) => {
             <>
               {!collapsed && (
                 <p className="text-[9px] font-bold uppercase tracking-widest px-3 pt-4 pb-1"
-                  style={{ color: "hsl(150 12% 40%)", fontFamily: "Plus Jakarta Sans, sans-serif" }}>
+                  style={{ color: "hsl(0 12% 40%)", fontFamily: "Plus Jakarta Sans, sans-serif" }}>
                   Admin
                 </p>
               )}
@@ -148,9 +148,9 @@ const AppLayout = ({ children }: { children: ReactNode }) => {
           {!collapsed && (
             <div className="px-3 py-2">
               <p className="text-[11px] font-medium truncate"
-                style={{ color: "hsl(150 12% 48%)", fontFamily: "Plus Jakarta Sans, sans-serif" }}>{user?.email}</p>
+                style={{ color: "hsl(0 12% 48%)", fontFamily: "Plus Jakarta Sans, sans-serif" }}>{user?.email}</p>
               <p className="text-[11px] font-bold capitalize tracking-wide"
-                style={{ color: "hsl(145,70%,55%)", fontFamily: "Sora, sans-serif" }}>{role}</p>
+                style={{ color: "hsl(6,65%,55%)", fontFamily: "Sora, sans-serif" }}>{role}</p>
             </div>
           )}
 
@@ -161,7 +161,7 @@ const AppLayout = ({ children }: { children: ReactNode }) => {
                 onClick={toggleTheme}
                 className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium w-full transition-all duration-200 hover:bg-white/6
                   ${collapsed ? "justify-center" : ""}`}
-                style={{ color: "hsl(150 15% 55%)" }}
+                style={{ color: "hsl(0 15% 55%)" }}
               >
                 {theme === "dark"
                   ? <Sun className="w-4 h-4 shrink-0 text-amber-400" />
@@ -187,9 +187,9 @@ const AppLayout = ({ children }: { children: ReactNode }) => {
               <button onClick={handleLogout}
                 className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium w-full transition-all duration-200
                   ${collapsed ? "justify-center" : ""}`}
-                style={{ color: "hsl(150 15% 55%)", fontFamily: "Plus Jakarta Sans, sans-serif" }}
+                style={{ color: "hsl(0 15% 55%)", fontFamily: "Plus Jakarta Sans, sans-serif" }}
                 onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = "hsl(0 72% 65%)"; (e.currentTarget as HTMLElement).style.background = "hsl(0 72% 51% / 0.12)"; }}
-                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = "hsl(150 15% 55%)"; (e.currentTarget as HTMLElement).style.background = "transparent"; }}>
+                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = "hsl(0 15% 55%)"; (e.currentTarget as HTMLElement).style.background = "transparent"; }}>
                 <LogOut className="w-4 h-4 shrink-0" />
                 {!collapsed && "Sign Out"}
               </button>
@@ -200,7 +200,7 @@ const AppLayout = ({ children }: { children: ReactNode }) => {
           {/* Collapse toggle */}
           <button onClick={() => setCollapsed(!collapsed)}
             className="hidden lg:flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm w-full transition-all duration-200 justify-center hover:bg-white/6"
-            style={{ color: "hsl(150 12% 46%)" }}>
+            style={{ color: "hsl(0 12% 46%)" }}>
             {collapsed ? <PanelLeft className="w-4 h-4" /> : <PanelLeftClose className="w-4 h-4" />}
           </button>
         </div>
