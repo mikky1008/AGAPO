@@ -118,7 +118,7 @@ const AppLayout = ({ children }: { children: ReactNode }) => {
                 style={{ fontFamily: "Sora, sans-serif", color: "hsl(0 15% 92%)" }}>GoldenReg</h1>
               <p className="text-[10px] font-semibold tracking-widest uppercase"
                 style={{ color: "hsl(0 12% 55%)", fontFamily: "Plus Jakarta Sans, sans-serif" }}>
-                Brgy. San Francisco
+                MUNICIPALITY OF MAINIT
               </p>
             </div>
           )}

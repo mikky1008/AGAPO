@@ -9,13 +9,13 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default:
-          "bg-gradient-to-r from-[hsl(158_64%_38%)] to-[hsl(145_72%_44%)] text-white shadow-[0_4px_16px_hsl(158_64%_38%/0.35)] hover:shadow-[0_6px_24px_hsl(158_64%_38%/0.50)] hover:-translate-y-0.5 active:translate-y-0",
+          "bg-gradient-to-r from-[hsl(6_65%_42%)] to-[hsl(6_68%_52%)] text-white shadow-[0_4px_16px_hsl(6_65%_42%/0.35)] hover:shadow-[0_6px_24px_hsl(6_65%_42%/0.50)] hover:-translate-y-0.5 active:translate-y-0",
         destructive:
           "bg-gradient-to-r from-destructive to-red-500 text-destructive-foreground shadow-[0_4px_16px_hsl(0_72%_56%/0.30)] hover:shadow-[0_6px_24px_hsl(0_72%_56%/0.45)] hover:-translate-y-0.5",
         outline:
-          "border border-border bg-card/80 backdrop-blur-sm hover:bg-muted text-foreground shadow-[0_2px_8px_hsl(0_0%_0%/0.06)] hover:shadow-[0_4px_16px_hsl(158_64%_38%/0.14)] hover:-translate-y-0.5",
+          "border border-border bg-card/80 backdrop-blur-sm hover:bg-muted text-foreground shadow-[0_2px_8px_hsl(0_0%_0%/0.06)] hover:shadow-[0_4px_16px_hsl(6_65%_42%/0.14)] hover:-translate-y-0.5",
         secondary:
-          "bg-gradient-to-r from-[hsl(172_60%_40%)] to-[hsl(158_64%_38%)] text-white shadow-[0_4px_16px_hsl(172_60%_40%/0.30)] hover:shadow-[0_6px_24px_hsl(172_60%_40%/0.45)] hover:-translate-y-0.5",
+          "bg-gradient-to-r from-[hsl(6_65%_36%)] to-[hsl(6_65%_42%)] text-white shadow-[0_4px_16px_hsl(6_65%_42%/0.30)] hover:shadow-[0_6px_24px_hsl(6_65%_42%/0.45)] hover:-translate-y-0.5",
         ghost:
           "hover:bg-muted text-muted-foreground hover:text-foreground transition-colors",
         link: "text-primary underline-offset-4 hover:underline",

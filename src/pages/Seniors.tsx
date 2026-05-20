@@ -127,7 +127,7 @@ const Seniors = () => {
     switch (level) {
       case "High": return "bg-red-500/15 text-red-400 border-red-500/30";
       case "Medium": return "bg-amber-500/15 text-amber-400 border-amber-500/30";
-      default: return "bg-emerald-500/15 text-emerald-400 border-emerald-500/30";
+      default: return "bg-red-500/15 text-red-400 border-red-500/30";
     }
   };
 
@@ -248,7 +248,7 @@ const Seniors = () => {
                     <td className="p-3 text-sm text-muted-foreground">{currentAge}</td>
                     <td className="p-3 text-sm text-muted-foreground hidden sm:table-cell">{senior.address}</td>
                     <td className="p-3">
-                      <span className={`text-xs px-2 py-0.5 rounded-full border ${illnessCount === 0 ? "bg-emerald-500/15 text-emerald-400 border-emerald-500/30" : illnessCount === 1 ? "bg-amber-500/15 text-amber-400 border-amber-500/30" : "bg-red-500/15 text-red-400 border-red-500/30"}`}>
+                      <span className={`text-xs px-2 py-0.5 rounded-full border ${illnessCount === 0 ? "bg-red-500/15 text-red-400 border-red-500/30" : illnessCount === 1 ? "bg-amber-500/15 text-amber-400 border-amber-500/30" : "bg-red-500/15 text-red-400 border-red-500/30"}`}>
                         {illnessCount === 0 ? "None" : `${illnessCount} illness${illnessCount > 1 ? "es" : ""}`}
                       </span>
                     </td>

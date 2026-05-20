@@ -105,7 +105,7 @@ const Users = () => {
           </div>
         </div>
         <div className="stat-card flex items-center gap-3">
-          <UserCircle className="w-4 h-4 text-emerald-600" />
+          <UserCircle className="w-4 h-4 text-red-600" />
           <div>
             <p className="text-2xl font-bold text-foreground">{activeCount}</p>
             <p className="text-xs text-muted-foreground">Active accounts</p>
@@ -144,7 +144,7 @@ const Users = () => {
                       </span>
                     </td>
                     <td className="p-3">
-                      <span className={`text-xs px-2 py-0.5 rounded-full border ${u.is_active ? "bg-emerald-500/15 text-emerald-400 border-emerald-500/30" : "bg-muted text-muted-foreground border-border"}`}>
+                      <span className={`text-xs px-2 py-0.5 rounded-full border ${u.is_active ? "bg-red-500/15 text-red-400 border-red-500/30" : "bg-muted text-muted-foreground border-border"}`}>
                         {u.is_active ? "Active" : "Inactive"}
                       </span>
                     </td>

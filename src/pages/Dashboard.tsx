@@ -26,8 +26,8 @@ const Dashboard = () => {
   const pendingAid = records.filter((r) => r.status === "Pending").length;
 
   const stats = [
-    { label: "Registered Seniors", value: totalSeniors, icon: Users, gradient: "from-emerald-500 to-teal-600", glow: "hsl(158 64% 38% / 0.30)", bg: "from-emerald-500/12 to-teal-500/12", iconColor: "text-emerald-600" },
-    { label: "Total Aid Given", value: totalAssistance, icon: HandHeart, gradient: "from-teal-500 to-cyan-600", glow: "hsl(172 60% 40% / 0.28)", bg: "from-teal-500/12 to-cyan-500/12", iconColor: "text-teal-600" },
+    { label: "Registered Seniors", value: totalSeniors, icon: Users, gradient: "from-red-500 to-rose-600", glow: "hsl(6 65% 42% / 0.30)", bg: "from-red-500/12 to-rose-500/12", iconColor: "text-red-600" },
+    { label: "Total Aid Given", value: totalAssistance, icon: HandHeart, gradient: "from-rose-500 to-red-700", glow: "hsl(6 65% 42% / 0.28)", bg: "from-rose-500/12 to-red-600/12", iconColor: "text-rose-600" },
     { label: "High Priority", value: highPriority, icon: AlertTriangle, gradient: "from-rose-500 to-red-600", glow: "hsl(0 72% 56% / 0.28)", bg: "from-rose-500/12 to-red-500/12", iconColor: "text-rose-600" },
     { label: "Pending Aid", value: pendingAid, icon: TrendingUp, gradient: "from-amber-400 to-orange-500", glow: "hsl(38 90% 52% / 0.28)", bg: "from-amber-400/12 to-orange-400/12", iconColor: "text-amber-600" },
   ];
@@ -81,7 +81,7 @@ const Dashboard = () => {
                 </div>
                 <div className="text-right shrink-0 ml-4">
                   <p className="text-sm font-bold text-foreground" style={{ fontFamily: "Sora, sans-serif" }}>₱{Number(record.amount).toLocaleString()}</p>
-                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${record.status === "Completed" ? "bg-emerald-500/15 text-emerald-400 border-emerald-500/30" : "bg-amber-500/15 text-amber-400 border-amber-500/30"}`}
+                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${record.status === "Completed" ? "bg-red-500/15 text-red-400 border-red-500/30" : "bg-amber-500/15 text-amber-400 border-amber-500/30"}`}
                     style={{ fontFamily: "Plus Jakarta Sans, sans-serif" }}>
                     {record.status}
                   </span>

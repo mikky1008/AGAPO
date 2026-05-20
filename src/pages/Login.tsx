@@ -280,7 +280,7 @@ const Login = () => {
         <div className="gr-glass-login p-8 w-full max-w-md text-center space-y-6">
           <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto"
             style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.18)" }}>
-            <CheckCircle className="w-8 h-8 text-green-400" />
+            <CheckCircle className="w-8 h-8 text-red-400" />
           </div>
           <div>
             <h2 className="text-xl font-bold text-white drop-shadow-md">Check your email</h2>
@@ -315,7 +315,7 @@ const Login = () => {
               GoldenReg
             </h1>
             <p className="text-xs text-white/50 mt-0.5" style={{ fontFamily: "Plus Jakarta Sans, sans-serif" }}>
-              Barangay San Francisco, Mainit, Surigao del Norte
+              OSCA of Mainit Municipality
             </p>
           </div>
         </div>
@@ -358,8 +358,8 @@ const Login = () => {
             {/* ══ SIGN IN ══ */}
             <TabsContent value="login" className="mt-5 space-y-4">
               {loginSuccess && (
-                <div className="flex items-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold text-green-300"
-                  style={{ background: "rgba(34,197,94,0.14)", border: "1px solid rgba(34,197,94,0.28)" }}>
+                <div className="flex items-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold text-red-300"
+                  style={{ background: "rgba(188,53,34,0.14)", border: "1px solid rgba(188,53,34,0.28)" }}>
                   <CheckCircle className="w-4 h-4 shrink-0" /> Login successful. Redirecting…
                 </div>
               )}
