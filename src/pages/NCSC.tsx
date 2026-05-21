@@ -1,7 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { calculateAge } from "@/lib/priorityScoring";
-import { Bell, CheckCircle2, Clock, Download, FileText, Gift, Search, Send, Star, Trophy, Users, X } from "lucide-react";
+import { Bell, CheckCircle2, Clock, Download, FileText, Gift, Search, Send, Star, Trophy, Users } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useUserRole } from "@/hooks/useUserRole";
@@ -482,25 +483,21 @@ const NCSC = () => {
       </div>
 
       {/* ── Payout Form Modal (Search-based) ── */}
-      {showPayoutForm && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
-          <div className="bg-card border border-border rounded-2xl shadow-2xl w-full max-w-md p-6 space-y-4 animate-fade-in overflow-y-auto max-h-[90vh]">
-            {/* Title */}
-            <div className="flex items-center justify-between">
+      <Dialog open={showPayoutForm} onOpenChange={(open) => { if (!open) resetPayoutForm(); }}>
+        <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
+          <div className="space-y-4">
+            <DialogHeader>
               <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-xl flex items-center justify-center text-lg"
+                <div className="w-9 h-9 rounded-xl flex items-center justify-center text-lg shrink-0"
                   style={{ background: "linear-gradient(135deg, hsl(38,85%,48%), hsl(6,65%,42%))" }}>
                   <Gift className="w-4 h-4 text-white" />
                 </div>
                 <div>
-                  <h2 className="font-bold text-foreground" style={{ fontFamily: "Sora, sans-serif" }}>Record NCSC Payout</h2>
+                  <DialogTitle style={{ fontFamily: "Sora, sans-serif" }}>Record NCSC Payout</DialogTitle>
                   <p className="text-xs text-muted-foreground">Search eligible senior (age 80, 85, 90, 95, 100)</p>
                 </div>
               </div>
-              <button onClick={resetPayoutForm} className="text-muted-foreground hover:text-foreground transition-colors">
-                <X className="w-5 h-5" />
-              </button>
-            </div>
+            </DialogHeader>
 
             {/* Search bar */}
             <div className="space-y-1" ref={searchRef}>
@@ -645,29 +642,26 @@ const NCSC = () => {
               </button>
             </div>
           </div>
-        </div>
-      )}
+        </DialogContent>
+      </Dialog>
 
       {/* ── Notify Staff Panel (Admin Only) ── */}
-      {showNotifPanel && isAdmin && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
-          <div className="bg-card border border-border rounded-2xl shadow-2xl w-full max-w-lg p-6 space-y-5 animate-fade-in overflow-y-auto max-h-[90vh]">
+      <Dialog open={showNotifPanel && isAdmin} onOpenChange={(open) => { if (!open) setShowNotifPanel(false); }}>
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+          <div className="space-y-5">
             {/* Header */}
-            <div className="flex items-center justify-between">
+            <DialogHeader>
               <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-xl flex items-center justify-center"
+                <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
                   style={{ background: "linear-gradient(135deg, hsl(220,75%,52%), hsl(250,65%,55%))" }}>
                   <Bell className="w-4 h-4 text-white" />
                 </div>
                 <div>
-                  <h2 className="font-bold text-foreground" style={{ fontFamily: "Sora, sans-serif" }}>Notify All Staff & Admins</h2>
+                  <DialogTitle style={{ fontFamily: "Sora, sans-serif" }}>Notify All Staff & Admins</DialogTitle>
                   <p className="text-xs text-muted-foreground">Send NCSC payout release announcement via email</p>
                 </div>
               </div>
-              <button onClick={() => setShowNotifPanel(false)} className="text-muted-foreground hover:text-foreground transition-colors">
-                <X className="w-5 h-5" />
-              </button>
-            </div>
+            </DialogHeader>
 
             {/* Email preview card */}
             <div className="rounded-xl border border-blue-500/20 bg-blue-500/5 overflow-hidden">
@@ -738,25 +732,27 @@ const NCSC = () => {
               </button>
             </div>
           </div>
-        </div>
-      )}
+        </DialogContent>
+      </Dialog>
 
       {/* ── Export Modal (Signatory) ── */}
-      {exportModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
-          <div className="bg-card border border-border rounded-2xl shadow-2xl w-full max-w-lg p-6 space-y-5 animate-fade-in overflow-y-auto max-h-[90vh]">
-            <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl flex items-center justify-center"
-                style={{ background: "linear-gradient(135deg, hsl(38,85%,48%), hsl(6,65%,42%))" }}>
-                {exportModal === "pdf" ? <Download className="w-4 h-4 text-white" /> : <FileText className="w-4 h-4 text-white" />}
+      <Dialog open={!!exportModal} onOpenChange={(open) => { if (!open) setExportModal(null); }}>
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+          <div className="space-y-5">
+            <DialogHeader>
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
+                  style={{ background: "linear-gradient(135deg, hsl(38,85%,48%), hsl(6,65%,42%))" }}>
+                  {exportModal === "pdf" ? <Download className="w-4 h-4 text-white" /> : <FileText className="w-4 h-4 text-white" />}
+                </div>
+                <div>
+                  <DialogTitle style={{ fontFamily: "Sora, sans-serif" }}>
+                    Export {exportModal === "pdf" ? "PDF" : "CSV"} Report
+                  </DialogTitle>
+                  <p className="text-xs text-muted-foreground">Fill in signatory details to include at the end of the document.</p>
+                </div>
               </div>
-              <div>
-                <h2 className="font-bold text-foreground" style={{ fontFamily: "Sora, sans-serif" }}>
-                  Export {exportModal === "pdf" ? "PDF" : "CSV"} Report
-                </h2>
-                <p className="text-xs text-muted-foreground">Fill in signatory details to include at the end of the document.</p>
-              </div>
-            </div>
+            </DialogHeader>
 
             <div className="space-y-3">
               <p className="text-xs font-semibold text-primary uppercase tracking-widest border-b border-primary/20 pb-1">Prepared By</p>
@@ -811,8 +807,8 @@ const NCSC = () => {
               </button>
             </div>
           </div>
-        </div>
-      )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
