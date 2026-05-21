@@ -1,7 +1,7 @@
 import { ReactNode, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
-  LayoutDashboard, Users, HandHeart, ShieldAlert, FileText, LogOut,
+  LayoutDashboard, Users, HandHeart, Trophy, FileText, LogOut,
   Menu, PanelLeftClose, PanelLeft, User, Bot, UsersRound, Sun, Moon, Star,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -16,7 +16,7 @@ const staffNavItems = [
   { to: "/dashboard",  icon: LayoutDashboard, label: "Dashboard" },
   { to: "/seniors",    icon: Users,           label: "Senior Citizens" },
   { to: "/assistance", icon: HandHeart,       label: "Assistance Records" },
-  { to: "/priority",   icon: ShieldAlert,     label: "Priority Assessment" },
+  { to: "/ncsc",        icon: Trophy,          label: "NCSC / ECA" },
   { to: "/reports",    icon: FileText,        label: "Reports" },
   { to: "/profile",    icon: User,            label: "Profile" },
 ];

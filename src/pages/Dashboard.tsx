@@ -1,6 +1,9 @@
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
-import { Users, HandHeart, AlertTriangle, TrendingUp } from "lucide-react";
+import { Users, HandHeart, Trophy, TrendingUp } from "lucide-react";
+import { calculateAge } from "@/lib/priorityScoring";
+
+const NCSC_MILESTONES = [80, 85, 90, 95, 100];
 
 const Dashboard = () => {
   const { data: seniors = [] } = useQuery({
@@ -19,16 +22,40 @@ const Dashboard = () => {
       return data;
     },
   });
+  const { data: payouts = [] } = useQuery({
+    queryKey: ["ncsc_payouts"],
+    queryFn: async () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data, error } = await (supabase as any).from("ncsc_payouts").select("*");
+      if (error) throw error;
+      return (data ?? []) as { senior_id: string; milestone_age: number; amount: number }[];
+    },
+  });
 
   const totalSeniors = seniors.length;
   const totalAssistance = records.length;
-  const highPriority = seniors.filter((s) => s.priority_level === "High").length;
-  const pendingAid = records.filter((r) => r.status === "Pending").length;
+
+  // NCSC eligible (age 80+) with pending milestones
+  const ncscEligible = seniors
+    .map((s: any) => ({ ...s, currentAge: calculateAge(s.birth_date) }))
+    .filter((s: any) => s.currentAge >= 80);
+
+  const pendingNcscPayouts = ncscEligible.reduce((count, senior: any) => {
+    NCSC_MILESTONES.forEach((m) => {
+      if (senior.currentAge >= m) {
+        const paid = payouts.some((p) => p.senior_id === senior.id && p.milestone_age === m);
+        if (!paid) count++;
+      }
+    });
+    return count;
+  }, 0);
+
+  const pendingAid = records.filter((r: any) => r.status === "Pending").length;
 
   const stats = [
     { label: "Registered Seniors", value: totalSeniors, icon: Users, gradient: "from-red-500 to-rose-600", glow: "hsl(6 65% 42% / 0.30)", bg: "from-red-500/12 to-rose-500/12", iconColor: "text-red-600" },
     { label: "Total Aid Given", value: totalAssistance, icon: HandHeart, gradient: "from-rose-500 to-red-700", glow: "hsl(6 65% 42% / 0.28)", bg: "from-rose-500/12 to-red-600/12", iconColor: "text-rose-600" },
-    { label: "High Priority", value: highPriority, icon: AlertTriangle, gradient: "from-rose-500 to-red-600", glow: "hsl(0 72% 56% / 0.28)", bg: "from-rose-500/12 to-red-500/12", iconColor: "text-rose-600" },
+    { label: "NCSC Eligible (80+)", value: ncscEligible.length, icon: Trophy, gradient: "from-amber-400 to-yellow-500", glow: "hsl(38 90% 52% / 0.28)", bg: "from-amber-400/12 to-yellow-400/12", iconColor: "text-amber-500" },
     { label: "Pending Aid", value: pendingAid, icon: TrendingUp, gradient: "from-amber-400 to-orange-500", glow: "hsl(38 90% 52% / 0.28)", bg: "from-amber-400/12 to-orange-400/12", iconColor: "text-amber-600" },
   ];
 
@@ -61,6 +88,7 @@ const Dashboard = () => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Recent Assistance */}
         <div className="glass-card p-6">
           <div className="flex items-center justify-between mb-5">
             <h2 className="text-base font-semibold text-foreground" style={{ fontFamily: "Sora, sans-serif" }}>Recent Assistance</h2>
@@ -69,7 +97,7 @@ const Dashboard = () => {
           </div>
           <div className="space-y-1">
             {recentRecords.length === 0 && <p className="text-sm text-muted-foreground py-4 text-center" style={{ fontFamily: "Plus Jakarta Sans, sans-serif" }}>No records yet.</p>}
-            {recentRecords.map((record) => (
+            {recentRecords.map((record: any) => (
               <div key={record.id} className="flex items-center justify-between py-2.5 px-3 rounded-xl hover:bg-muted/60 transition-colors">
                 <div>
                   <p className="text-sm font-semibold text-foreground" style={{ fontFamily: "Plus Jakarta Sans, sans-serif" }}>
@@ -91,26 +119,41 @@ const Dashboard = () => {
           </div>
         </div>
 
+        {/* NCSC Pending Payouts panel */}
         <div className="glass-card p-6">
           <div className="flex items-center justify-between mb-5">
-            <h2 className="text-base font-semibold text-foreground" style={{ fontFamily: "Sora, sans-serif" }}>Priority Seniors</h2>
-            <span className="text-[10px] font-bold text-red-400 bg-red-500/15 border border-red-500/30 px-2.5 py-1 rounded-lg uppercase tracking-wider"
-              style={{ fontFamily: "Plus Jakarta Sans, sans-serif" }}>High Priority</span>
+            <h2 className="text-base font-semibold text-foreground" style={{ fontFamily: "Sora, sans-serif" }}>NCSC Pending Payouts</h2>
+            <span className="text-[10px] font-bold text-amber-400 bg-amber-500/15 border border-amber-500/30 px-2.5 py-1 rounded-lg uppercase tracking-wider"
+              style={{ fontFamily: "Plus Jakarta Sans, sans-serif" }}>{pendingNcscPayouts} Pending</span>
           </div>
           <div className="space-y-1">
-            {seniors.filter((s) => s.priority_level === "High").length === 0 && (
-              <p className="text-sm text-muted-foreground py-4 text-center" style={{ fontFamily: "Plus Jakarta Sans, sans-serif" }}>No high priority seniors</p>
+            {ncscEligible.length === 0 && (
+              <p className="text-sm text-muted-foreground py-4 text-center" style={{ fontFamily: "Plus Jakarta Sans, sans-serif" }}>No eligible seniors (80+) registered.</p>
             )}
-            {seniors.filter((s) => s.priority_level === "High").map((senior) => (
-              <div key={senior.id} className="flex items-center justify-between py-2.5 px-3 rounded-xl hover:bg-muted/60 transition-colors">
-                <div>
-                  <p className="text-sm font-semibold text-foreground" style={{ fontFamily: "Plus Jakarta Sans, sans-serif" }}>{senior.first_name} {senior.last_name}</p>
-                  <p className="text-xs text-muted-foreground mt-0.5" style={{ fontFamily: "Plus Jakarta Sans, sans-serif" }}>Age {senior.age} · {senior.income_level} income</p>
+            {ncscEligible.slice(0, 5).map((senior: any) => {
+              const seniorPending = [80, 85, 90, 95, 100].filter(
+                (m) => senior.currentAge >= m && !payouts.some((p) => p.senior_id === senior.id && p.milestone_age === m)
+              );
+              if (seniorPending.length === 0) return null;
+              return (
+                <div key={senior.id} className="flex items-center justify-between py-2.5 px-3 rounded-xl hover:bg-muted/60 transition-colors">
+                  <div>
+                    <p className="text-sm font-semibold text-foreground" style={{ fontFamily: "Plus Jakarta Sans, sans-serif" }}>{senior.first_name} {senior.last_name}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5" style={{ fontFamily: "Plus Jakarta Sans, sans-serif" }}>
+                      Age {senior.currentAge} · {senior.currentAge >= 100 ? "👑 Centenarian" : "NCSC eligible"}
+                    </p>
+                  </div>
+                  <div className="flex gap-1 shrink-0 ml-4 flex-wrap justify-end">
+                    {seniorPending.map((m) => (
+                      <span key={m} className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-400 border border-amber-500/30"
+                        style={{ fontFamily: "Plus Jakarta Sans, sans-serif" }}>
+                        {m}
+                      </span>
+                    ))}
+                  </div>
                 </div>
-                <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-red-500/15 text-red-400 border border-red-500/30 shrink-0 ml-4"
-                  style={{ fontFamily: "Plus Jakarta Sans, sans-serif" }}>Critical</span>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </div>

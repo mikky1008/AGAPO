@@ -10,7 +10,7 @@ import Dashboard from "./pages/Dashboard";
 import Seniors from "./pages/Seniors";
 import Assistance from "./pages/Assistance";
 import Reports from "./pages/Reports";
-import Priority from "./pages/Priority";
+import NCSC from "./pages/NCSC";
 import Profile from "./pages/Profile";
 import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
@@ -45,7 +45,7 @@ const App = () => (
               <Route path="/dashboard"  element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
               <Route path="/seniors"    element={<ProtectedRoute><Seniors /></ProtectedRoute>} />
               <Route path="/assistance" element={<ProtectedRoute><Assistance /></ProtectedRoute>} />
-              <Route path="/priority"   element={<ProtectedRoute><Priority /></ProtectedRoute>} />
+              <Route path="/ncsc"       element={<ProtectedRoute><NCSC /></ProtectedRoute>} />
               <Route path="/reports"    element={<ProtectedRoute><Reports /></ProtectedRoute>} />
               <Route path="/agent-logs" element={<ProtectedRoute><AgentLogs /></ProtectedRoute>} />
               <Route path="/users"      element={<ProtectedRoute><Users /></ProtectedRoute>} />

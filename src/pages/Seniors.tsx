@@ -233,7 +233,7 @@ const Seniors = () => {
                 <th className="text-left p-3 text-xs font-medium text-muted-foreground uppercase">Age</th>
                 <th className="text-left p-3 text-xs font-medium text-muted-foreground uppercase hidden sm:table-cell">Address</th>
                 <th className="text-left p-3 text-xs font-medium text-muted-foreground uppercase">Illnesses</th>
-                <th className="text-left p-3 text-xs font-medium text-muted-foreground uppercase">Priority</th>
+                <th className="text-left p-3 text-xs font-medium text-muted-foreground uppercase hidden md:table-cell">NCSC</th>
                 <th className="text-left p-3 text-xs font-medium text-muted-foreground uppercase">Actions</th>
               </tr>
             </thead>
@@ -252,8 +252,14 @@ const Seniors = () => {
                         {illnessCount === 0 ? "None" : `${illnessCount} illness${illnessCount > 1 ? "es" : ""}`}
                       </span>
                     </td>
-                    <td className="p-3">
-                      <Badge variant="outline" className={priorityColor(senior.priority_level || "Low")}>{senior.priority_level || "Low"}</Badge>
+                    <td className="p-3 hidden md:table-cell">
+                      {currentAge >= 100 ? (
+                        <span className="text-xs px-2 py-0.5 rounded-full border bg-red-500/15 text-red-400 border-red-500/30">👑 Centenarian</span>
+                      ) : currentAge >= 80 ? (
+                        <span className="text-xs px-2 py-0.5 rounded-full border bg-amber-500/15 text-amber-400 border-amber-500/30">🏅 NCSC Eligible</span>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">—</span>
+                      )}
                     </td>
                     <td className="p-3">
                       <div className="flex items-center gap-1">
