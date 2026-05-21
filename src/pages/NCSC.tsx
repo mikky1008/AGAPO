@@ -1,9 +1,10 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { calculateAge } from "@/lib/priorityScoring";
-import { CheckCircle2, Clock, Download, FileText, Gift, Star, Trophy, Users } from "lucide-react";
-import { useState } from "react";
+import { Bell, CheckCircle2, Clock, Download, FileText, Gift, Search, Send, Star, Trophy, Users, X } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { useUserRole } from "@/hooks/useUserRole";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 
@@ -15,6 +16,8 @@ const MILESTONES = [
   { age: 100, label: "Centenarian (ECA)", amount: 100000, badge: "bg-red-500/15 text-red-400 border-red-500/30",           icon: "👑" },
 ];
 
+const ELIGIBLE_AGES = [80, 85, 90, 95, 100];
+
 type Payout = {
   id: string; senior_id: string; milestone_age: number; amount: number;
   date_given: string; given_by: string; remarks: string | null; created_at: string;
@@ -25,8 +28,25 @@ type SignatoryInfo = { preparedBy: string; preparedByPosition: string; signedBy:
 const NCSC = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [selectedSenior, setSelectedSenior] = useState<any>(null);
-  const [payoutForm, setPayoutForm] = useState<{ milestoneAge: number; givenBy: string; remarks: string } | null>(null);
+  const { isAdmin } = useUserRole();
+
+  // Payout form (new search-based)
+  const [payoutSearchQuery, setPayoutSearchQuery] = useState("");
+  const [payoutSearchOpen, setPayoutSearchOpen] = useState(false);
+  const [payoutSelectedSenior, setPayoutSelectedSenior] = useState<any>(null);
+  const [payoutSelectedMilestone, setPayoutSelectedMilestone] = useState<number | null>(null);
+  const [payoutGivenBy, setPayoutGivenBy] = useState("");
+  const [payoutRemarks, setPayoutRemarks] = useState("");
+  const [showPayoutForm, setShowPayoutForm] = useState(false);
+  const searchRef = useRef<HTMLDivElement>(null);
+
+  // Notification panel
+  const [showNotifPanel, setShowNotifPanel] = useState(false);
+  const [notifReleaseDate, setNotifReleaseDate] = useState("");
+  const [notifMessage, setNotifMessage] = useState("");
+  const [notifSending, setNotifSending] = useState(false);
+
+  // Export
   const [exportModal, setExportModal] = useState<"csv" | "pdf" | null>(null);
   const [signatory, setSignatory] = useState<SignatoryInfo>({
     preparedBy: "", preparedByPosition: "",
@@ -63,15 +83,19 @@ const NCSC = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["ncsc_payouts"] });
-      setPayoutForm(null); setSelectedSenior(null);
+      resetPayoutForm();
       toast({ title: "Payout recorded successfully!", description: "NCSC payout has been saved." });
     },
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     onError: (e: any) => toast({ title: "Error", description: e.message, variant: "destructive" }),
   });
 
   const eligibleSeniors = seniors
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     .map((s: any) => ({ ...s, currentAge: calculateAge(s.birth_date) }))
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     .filter((s: any) => s.currentAge >= 80)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     .sort((a: any, b: any) => b.currentAge - a.currentAge);
 
   const totalEligible = eligibleSeniors.length;
@@ -87,6 +111,89 @@ const NCSC = () => {
   const getSeniorPayouts = (id: string) => payouts.filter((p) => p.senior_id === id);
   const isPaid = (id: string, age: number) => payouts.some((p) => p.senior_id === id && p.milestone_age === age);
   const getMilestone = (age: number) => MILESTONES.find((m) => m.age === age);
+
+  // ── Search / Autocomplete ──────────────────────────────────────
+  const filteredSearchResults = eligibleSeniors.filter((s: any) => {
+    const fullName = `${s.first_name} ${s.last_name}`.toLowerCase();
+    return fullName.includes(payoutSearchQuery.toLowerCase()) && payoutSearchQuery.length > 0;
+  }).slice(0, 8);
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (searchRef.current && !searchRef.current.contains(e.target as Node)) {
+        setPayoutSearchOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  const resetPayoutForm = () => {
+    setPayoutSearchQuery("");
+    setPayoutSelectedSenior(null);
+    setPayoutSelectedMilestone(null);
+    setPayoutGivenBy("");
+    setPayoutRemarks("");
+    setShowPayoutForm(false);
+    setPayoutSearchOpen(false);
+  };
+
+  const handleSelectSeniorFromSearch = (senior: any) => {
+    setPayoutSelectedSenior(senior);
+    setPayoutSearchQuery(`${senior.first_name} ${senior.last_name}`);
+    setPayoutSearchOpen(false);
+    setPayoutSelectedMilestone(null);
+  };
+
+  const getUnpaidMilestones = (senior: any) =>
+    MILESTONES.filter((m) => senior.currentAge >= m.age && !isPaid(senior.id, m.age));
+
+  const handleConfirmPayout = () => {
+    if (!payoutSelectedSenior || !payoutSelectedMilestone || !payoutGivenBy.trim()) return;
+    addPayout.mutate({
+      senior_id: payoutSelectedSenior.id,
+      milestone_age: payoutSelectedMilestone,
+      amount: getMilestone(payoutSelectedMilestone)!.amount,
+      given_by: payoutGivenBy,
+      remarks: payoutRemarks,
+    });
+  };
+
+  // ── Send Notification via Gmail SMTP ──────────────────────────
+  const handleSendNotification = async () => {
+    if (!notifReleaseDate) {
+      toast({ title: "Missing date", description: "Please select a release date.", variant: "destructive" });
+      return;
+    }
+    setNotifSending(true);
+    try {
+      const releaseFormatted = new Date(notifReleaseDate).toLocaleDateString("en-PH", {
+        weekday: "long", year: "numeric", month: "long", day: "numeric",
+      });
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { error } = await (supabase as any).functions.invoke("send-ncsc-release-notification", {
+        body: {
+          releaseDate: releaseFormatted,
+          rawDate: notifReleaseDate,
+          customMessage: notifMessage.trim() || null,
+          totalEligible,
+          pendingPayouts,
+          totalDisbursed,
+        },
+      });
+      if (error) throw new Error(error.message);
+      toast({ title: "Notification sent!", description: `All staff & admins have been notified of the ${releaseFormatted} payout release.` });
+      setShowNotifPanel(false);
+      setNotifReleaseDate("");
+      setNotifMessage("");
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (e: any) {
+      toast({ title: "Failed to send", description: e.message || "Could not reach notification service.", variant: "destructive" });
+    } finally {
+      setNotifSending(false);
+    }
+  };
 
   // ── Export helpers ──────────────────────────────────────────────
   const buildRows = () => {
@@ -115,14 +222,12 @@ const NCSC = () => {
     rows.forEach((r) => {
       csv += `"${r.name}",${r.age},"${r.milestone}",${r.amount},"${r.dateGiven}","${r.givenBy}","${r.remarks}","${r.status}"\n`;
     });
-    // Signatory footer
     csv += `\n`;
     csv += `"Prepared by:","${signatory.preparedBy}"\n`;
     csv += `"Position:","${signatory.preparedByPosition}"\n`;
     csv += `\n`;
     csv += `"Signed/Approved by:","${signatory.signedBy}"\n`;
     csv += `"Position:","${signatory.signedByPosition}"\n`;
-
     const blob = new Blob([csv], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -138,8 +243,6 @@ const NCSC = () => {
     const rows = buildRows();
     const doc = new jsPDF({ orientation: "landscape" });
     const today = new Date().toLocaleDateString("en-PH", { year: "numeric", month: "long", day: "numeric" });
-
-    // Header
     doc.setFontSize(13);
     doc.setFont("helvetica", "bold");
     doc.text("REPUBLIC OF THE PHILIPPINES", 148, 14, { align: "center" });
@@ -147,17 +250,13 @@ const NCSC = () => {
     doc.setFont("helvetica", "normal");
     doc.text("Municipality of Mainit", 148, 20, { align: "center" });
     doc.text("Office of Senior Citizens Affairs (OSCA)", 148, 26, { align: "center" });
-
     doc.setFontSize(12);
     doc.setFont("helvetica", "bold");
     doc.text("NCSC / ECA PROGRESSIVE PAYOUT REPORT", 148, 35, { align: "center" });
-
     doc.setFontSize(8);
     doc.setFont("helvetica", "normal");
     doc.text(`Date Generated: ${today}`, 14, 43);
     doc.text(`Total Eligible Seniors (80+): ${totalEligible}     Total Disbursed: PHP ${totalDisbursed.toLocaleString()}     Pending Milestones: ${pendingPayouts}`, 14, 49);
-
-    // Table
     autoTable(doc, {
       startY: 54,
       head: [["Name", "Age", "Milestone", "Amount (PHP)", "Date Given", "Given By", "Remarks", "Status"]],
@@ -176,15 +275,10 @@ const NCSC = () => {
         }
       },
     });
-
-    // Signatory section
     const finalY = (doc as any).lastAutoTable.finalY + 16;
     const pageW = doc.internal.pageSize.getWidth();
-
     doc.setFontSize(9);
     doc.setFont("helvetica", "normal");
-
-    // Prepared by (left)
     doc.text("Prepared by:", 30, finalY);
     doc.setFont("helvetica", "bold");
     doc.text(signatory.preparedBy || "___________________________", 30, finalY + 12);
@@ -192,8 +286,6 @@ const NCSC = () => {
     doc.setFontSize(8);
     doc.text(signatory.preparedByPosition || "Position / Designation", 30, finalY + 17);
     doc.line(30, finalY + 13, 100, finalY + 13);
-
-    // Signed / Approved by (right)
     doc.setFontSize(9);
     doc.text("Signed / Approved by:", pageW - 100, finalY);
     doc.setFont("helvetica", "bold");
@@ -202,7 +294,6 @@ const NCSC = () => {
     doc.setFontSize(8);
     doc.text(signatory.signedByPosition || "Position / Designation", pageW - 100, finalY + 17);
     doc.line(pageW - 100, finalY + 13, pageW - 30, finalY + 13);
-
     doc.save(`NCSC_ECA_Payout_Report_${new Date().toISOString().split("T")[0]}.pdf`);
     setExportModal(null);
     toast({ title: "PDF Downloaded", description: "NCSC/ECA report saved." });
@@ -228,8 +319,25 @@ const NCSC = () => {
           </div>
         </div>
 
-        {/* Export buttons */}
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="flex items-center gap-2 shrink-0 flex-wrap">
+          {/* Admin-only: Notify Staff button */}
+          {isAdmin && (
+            <button
+              onClick={() => setShowNotifPanel(true)}
+              className="flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium transition-all hover:opacity-90"
+              style={{ background: "linear-gradient(135deg, hsl(220,75%,52%), hsl(250,65%,55%))", color: "#fff" }}
+            >
+              <Bell className="w-4 h-4" /> Notify Staff
+            </button>
+          )}
+          {/* Add Payout button */}
+          <button
+            onClick={() => setShowPayoutForm(true)}
+            className="flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium text-white transition-all hover:opacity-90"
+            style={{ background: "linear-gradient(135deg, hsl(142,65%,38%), hsl(160,55%,32%))" }}
+          >
+            <Gift className="w-4 h-4" /> Record Payout
+          </button>
           <button
             onClick={() => setExportModal("csv")}
             className="flex items-center gap-2 px-3 py-2 rounded-xl border border-border text-sm font-medium text-muted-foreground hover:bg-muted/50 hover:text-foreground transition-all"
@@ -340,7 +448,14 @@ const NCSC = () => {
                       className={`rounded-xl border p-3 text-center transition-all ${paid
                         ? "bg-emerald-500/10 border-emerald-500/25"
                         : "bg-amber-500/8 border-amber-500/20 cursor-pointer hover:bg-amber-500/15"}`}
-                      onClick={() => { if (!paid) { setSelectedSenior(senior); setPayoutForm({ milestoneAge: m.age, givenBy: "", remarks: "" }); } }}
+                      onClick={() => {
+                        if (!paid) {
+                          setPayoutSelectedSenior(senior);
+                          setPayoutSearchQuery(`${senior.first_name} ${senior.last_name}`);
+                          setPayoutSelectedMilestone(m.age);
+                          setShowPayoutForm(true);
+                        }
+                      }}
                     >
                       <div className="text-lg mb-1">{m.icon}</div>
                       <p className="text-xs font-bold text-foreground" style={{ fontFamily: "Sora, sans-serif" }}>Age {m.age}</p>
@@ -366,49 +481,260 @@ const NCSC = () => {
         })}
       </div>
 
-      {/* ── Payout Modal ── */}
-      {payoutForm && selectedSenior && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+      {/* ── Payout Form Modal (Search-based) ── */}
+      {showPayoutForm && (
+        <div className="fixed inset-0 bg-black/55 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-card border border-border rounded-2xl shadow-2xl w-full max-w-md p-6 space-y-4 animate-fade-in">
-            <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl flex items-center justify-center text-lg"
-                style={{ background: "linear-gradient(135deg, hsl(38,85%,48%), hsl(6,65%,42%))" }}>
-                {getMilestone(payoutForm.milestoneAge)?.icon}
+            {/* Title */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl flex items-center justify-center text-lg"
+                  style={{ background: "linear-gradient(135deg, hsl(38,85%,48%), hsl(6,65%,42%))" }}>
+                  <Gift className="w-4 h-4 text-white" />
+                </div>
+                <div>
+                  <h2 className="font-bold text-foreground" style={{ fontFamily: "Sora, sans-serif" }}>Record NCSC Payout</h2>
+                  <p className="text-xs text-muted-foreground">Search eligible senior (age 80, 85, 90, 95, 100)</p>
+                </div>
               </div>
-              <div>
-                <h2 className="font-bold text-foreground" style={{ fontFamily: "Sora, sans-serif" }}>Record NCSC Payout</h2>
-                <p className="text-xs text-muted-foreground">{selectedSenior.first_name} {selectedSenior.last_name} · Age {payoutForm.milestoneAge} milestone</p>
+              <button onClick={resetPayoutForm} className="text-muted-foreground hover:text-foreground transition-colors">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Search bar */}
+            <div className="space-y-1" ref={searchRef}>
+              <label className="field-label block text-xs mb-1">Senior Name <span className="text-red-400">*</span></label>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+                <input
+                  autoFocus
+                  className="w-full bg-muted/50 border border-border rounded-xl pl-9 pr-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40"
+                  placeholder="Type senior's name to search..."
+                  value={payoutSearchQuery}
+                  onChange={(e) => {
+                    setPayoutSearchQuery(e.target.value);
+                    setPayoutSearchOpen(true);
+                    if (!e.target.value) { setPayoutSelectedSenior(null); setPayoutSelectedMilestone(null); }
+                  }}
+                  onFocus={() => setPayoutSearchOpen(true)}
+                />
+                {/* Autocomplete dropdown */}
+                {payoutSearchOpen && filteredSearchResults.length > 0 && (
+                  <div className="absolute top-full mt-1 left-0 right-0 bg-card border border-border rounded-xl shadow-xl z-10 overflow-hidden">
+                    {filteredSearchResults.map((s: any) => {
+                      const unpaid = getUnpaidMilestones(s);
+                      return (
+                        <button
+                          key={s.id}
+                          className="w-full px-4 py-2.5 text-left hover:bg-muted/60 transition-colors flex items-center justify-between gap-3 border-b border-border/50 last:border-0"
+                          onMouseDown={() => handleSelectSeniorFromSearch(s)}
+                        >
+                          <div>
+                            <p className="text-sm font-semibold text-foreground" style={{ fontFamily: "Sora, sans-serif" }}>
+                              {s.first_name} {s.last_name}
+                            </p>
+                            <p className="text-[11px] text-muted-foreground">Age {s.currentAge} · {s.address}</p>
+                          </div>
+                          <div className="text-right shrink-0">
+                            {unpaid.length > 0 ? (
+                              <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-400 border border-amber-500/30 font-medium">
+                                {unpaid.length} unpaid
+                              </span>
+                            ) : (
+                              <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 font-medium">
+                                All paid
+                              </span>
+                            )}
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+                {payoutSearchOpen && payoutSearchQuery.length > 0 && filteredSearchResults.length === 0 && (
+                  <div className="absolute top-full mt-1 left-0 right-0 bg-card border border-border rounded-xl shadow-xl z-10 px-4 py-3">
+                    <p className="text-sm text-muted-foreground">No eligible seniors found for "{payoutSearchQuery}"</p>
+                  </div>
+                )}
               </div>
             </div>
-            <div className="bg-muted/40 rounded-xl p-3 text-sm">
-              <div className="flex justify-between"><span className="text-muted-foreground">Milestone</span><span className="font-semibold text-foreground">{getMilestone(payoutForm.milestoneAge)?.label}</span></div>
-              <div className="flex justify-between mt-1"><span className="text-muted-foreground">Amount</span><span className="font-bold text-amber-400">₱{getMilestone(payoutForm.milestoneAge)?.amount.toLocaleString()}</span></div>
-            </div>
-            <div className="space-y-3">
-              <div>
-                <label className="field-label block mb-1">Given By <span className="text-red-400">*</span></label>
-                <input className="w-full bg-muted/50 border border-border rounded-xl px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40"
-                  placeholder="Name of officer / staff" value={payoutForm.givenBy}
-                  onChange={(e) => setPayoutForm({ ...payoutForm, givenBy: e.target.value })} />
-              </div>
-              <div>
-                <label className="field-label block mb-1">Remarks (optional)</label>
-                <textarea className="w-full bg-muted/50 border border-border rounded-xl px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 resize-none"
-                  placeholder="Additional notes..." rows={2} value={payoutForm.remarks}
-                  onChange={(e) => setPayoutForm({ ...payoutForm, remarks: e.target.value })} />
-              </div>
-            </div>
+
+            {/* Milestone selector (shown after senior is picked) */}
+            {payoutSelectedSenior && (
+              <>
+                <div className="bg-muted/30 rounded-xl p-3 text-sm flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-lg flex items-center justify-center text-base shrink-0"
+                    style={{ background: "linear-gradient(135deg, hsl(38,65%,35%), hsl(38,50%,28%))" }}>
+                    {payoutSelectedSenior.currentAge >= 100 ? "👑" : "⭐"}
+                  </div>
+                  <div>
+                    <p className="font-semibold text-foreground">{payoutSelectedSenior.first_name} {payoutSelectedSenior.last_name}</p>
+                    <p className="text-[11px] text-muted-foreground">Age {payoutSelectedSenior.currentAge} · {payoutSelectedSenior.address}</p>
+                  </div>
+                </div>
+
+                {/* Milestone selection */}
+                <div>
+                  <label className="field-label block text-xs mb-2">Select Milestone to Pay <span className="text-red-400">*</span></label>
+                  {getUnpaidMilestones(payoutSelectedSenior).length === 0 ? (
+                    <p className="text-sm text-emerald-400 flex items-center gap-1.5 py-2">
+                      <CheckCircle2 className="w-4 h-4" /> All milestones already paid for this senior.
+                    </p>
+                  ) : (
+                    <div className="grid grid-cols-3 gap-2">
+                      {getUnpaidMilestones(payoutSelectedSenior).map((m) => (
+                        <button
+                          key={m.age}
+                          onClick={() => setPayoutSelectedMilestone(m.age)}
+                          className={`rounded-xl border p-2.5 text-center transition-all text-sm ${
+                            payoutSelectedMilestone === m.age
+                              ? "border-amber-500/60 bg-amber-500/20 text-amber-300"
+                              : "border-border bg-muted/30 text-muted-foreground hover:border-amber-500/40 hover:bg-amber-500/10"
+                          }`}
+                        >
+                          <div className="text-base mb-0.5">{m.icon}</div>
+                          <div className="font-bold text-xs">Age {m.age}</div>
+                          <div className="text-[10px]">₱{m.amount.toLocaleString()}</div>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {payoutSelectedMilestone && (
+                  <div className="bg-muted/40 rounded-xl p-3 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Milestone</span>
+                      <span className="font-semibold text-foreground">{getMilestone(payoutSelectedMilestone)?.label}</span>
+                    </div>
+                    <div className="flex justify-between mt-1">
+                      <span className="text-muted-foreground">Amount</span>
+                      <span className="font-bold text-amber-400">₱{getMilestone(payoutSelectedMilestone)?.amount.toLocaleString()}</span>
+                    </div>
+                  </div>
+                )}
+
+                <div className="space-y-3">
+                  <div>
+                    <label className="field-label block mb-1 text-xs">Given By <span className="text-red-400">*</span></label>
+                    <input className="w-full bg-muted/50 border border-border rounded-xl px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40"
+                      placeholder="Name of officer / staff"
+                      value={payoutGivenBy}
+                      onChange={(e) => setPayoutGivenBy(e.target.value)} />
+                  </div>
+                  <div>
+                    <label className="field-label block mb-1 text-xs">Remarks (optional)</label>
+                    <textarea className="w-full bg-muted/50 border border-border rounded-xl px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 resize-none"
+                      placeholder="Additional notes..." rows={2}
+                      value={payoutRemarks}
+                      onChange={(e) => setPayoutRemarks(e.target.value)} />
+                  </div>
+                </div>
+              </>
+            )}
+
             <div className="flex gap-2 pt-1">
               <button className="flex-1 px-4 py-2.5 rounded-xl border border-border text-sm font-medium text-muted-foreground hover:bg-muted/50 transition-colors"
-                onClick={() => { setPayoutForm(null); setSelectedSenior(null); }}>Cancel</button>
+                onClick={resetPayoutForm}>Cancel</button>
               <button className="flex-1 px-4 py-2.5 rounded-xl text-sm font-bold text-white transition-all hover:opacity-90 disabled:opacity-50"
                 style={{ background: "linear-gradient(135deg, hsl(38,85%,48%), hsl(6,65%,42%))" }}
-                disabled={!payoutForm.givenBy.trim() || addPayout.isPending}
-                onClick={() => {
-                  if (!payoutForm.givenBy.trim()) return;
-                  addPayout.mutate({ senior_id: selectedSenior.id, milestone_age: payoutForm.milestoneAge, amount: getMilestone(payoutForm.milestoneAge)!.amount, given_by: payoutForm.givenBy, remarks: payoutForm.remarks });
-                }}>
+                disabled={!payoutSelectedSenior || !payoutSelectedMilestone || !payoutGivenBy.trim() || addPayout.isPending}
+                onClick={handleConfirmPayout}>
                 {addPayout.isPending ? "Saving..." : "Confirm & Save"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Notify Staff Panel (Admin Only) ── */}
+      {showNotifPanel && isAdmin && (
+        <div className="fixed inset-0 bg-black/55 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-card border border-border rounded-2xl shadow-2xl w-full max-w-lg p-6 space-y-5 animate-fade-in">
+            {/* Header */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl flex items-center justify-center"
+                  style={{ background: "linear-gradient(135deg, hsl(220,75%,52%), hsl(250,65%,55%))" }}>
+                  <Bell className="w-4 h-4 text-white" />
+                </div>
+                <div>
+                  <h2 className="font-bold text-foreground" style={{ fontFamily: "Sora, sans-serif" }}>Notify All Staff & Admins</h2>
+                  <p className="text-xs text-muted-foreground">Send NCSC payout release announcement via email</p>
+                </div>
+              </div>
+              <button onClick={() => setShowNotifPanel(false)} className="text-muted-foreground hover:text-foreground transition-colors">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Email preview card */}
+            <div className="rounded-xl border border-blue-500/20 bg-blue-500/5 overflow-hidden">
+              <div className="px-4 py-2.5 border-b border-blue-500/15 flex items-center gap-2">
+                <div className="w-2 h-2 rounded-full bg-blue-400" />
+                <p className="text-xs font-semibold text-blue-400 uppercase tracking-wider">Email Template Preview</p>
+              </div>
+              <div className="p-4 space-y-2 text-xs text-muted-foreground font-mono">
+                <p><span className="text-blue-400">From:</span> AGAPO OSCA &lt;autobitofficial.ph@gmail.com&gt;</p>
+                <p><span className="text-blue-400">To:</span> All registered staff & admins</p>
+                <p><span className="text-blue-400">Subject:</span> 📢 NCSC/ECA Payout Release — [Selected Date]</p>
+                <hr className="border-border/50 my-2" />
+                <p className="text-foreground/80">Body includes: release date, eligible senior count, pending milestones, total disbursed, and your custom message.</p>
+              </div>
+            </div>
+
+            {/* Release date */}
+            <div>
+              <label className="field-label block text-xs mb-1">Payout Release Date <span className="text-red-400">*</span></label>
+              <input
+                type="date"
+                className="w-full bg-muted/50 border border-border rounded-xl px-3 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40"
+                value={notifReleaseDate}
+                onChange={(e) => setNotifReleaseDate(e.target.value)}
+              />
+            </div>
+
+            {/* Custom message */}
+            <div>
+              <label className="field-label block text-xs mb-1">Additional Message (optional)</label>
+              <textarea
+                className="w-full bg-muted/50 border border-border rounded-xl px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 resize-none"
+                placeholder="e.g. Please prepare the necessary documents. Report to the OSCA office by 8AM."
+                rows={3}
+                value={notifMessage}
+                onChange={(e) => setNotifMessage(e.target.value)}
+              />
+            </div>
+
+            {/* Stats summary */}
+            <div className="grid grid-cols-3 gap-2 text-center">
+              {[
+                { label: "Eligible", value: totalEligible },
+                { label: "Pending", value: pendingPayouts },
+                { label: "Disbursed", value: `₱${(totalDisbursed / 1000).toFixed(0)}K` },
+              ].map((s) => (
+                <div key={s.label} className="rounded-xl bg-muted/30 border border-border p-2">
+                  <p className="text-base font-bold text-foreground" style={{ fontFamily: "Sora, sans-serif" }}>{s.value}</p>
+                  <p className="text-[10px] text-muted-foreground">{s.label}</p>
+                </div>
+              ))}
+            </div>
+
+            <div className="flex gap-2 pt-1">
+              <button className="flex-1 px-4 py-2.5 rounded-xl border border-border text-sm font-medium text-muted-foreground hover:bg-muted/50 transition-colors"
+                onClick={() => setShowNotifPanel(false)}>Cancel</button>
+              <button
+                className="flex-1 px-4 py-2.5 rounded-xl text-sm font-bold text-white transition-all hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-2"
+                style={{ background: "linear-gradient(135deg, hsl(220,75%,52%), hsl(250,65%,55%))" }}
+                disabled={!notifReleaseDate || notifSending}
+                onClick={handleSendNotification}
+              >
+                {notifSending ? (
+                  <><span className="animate-spin inline-block w-3 h-3 border-2 border-white/30 border-t-white rounded-full" /> Sending...</>
+                ) : (
+                  <><Send className="w-4 h-4" /> Send Notification</>
+                )}
               </button>
             </div>
           </div>
@@ -432,7 +758,6 @@ const NCSC = () => {
               </div>
             </div>
 
-            {/* Prepared by */}
             <div className="space-y-3">
               <p className="text-xs font-semibold text-primary uppercase tracking-widest border-b border-primary/20 pb-1">Prepared By</p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -451,7 +776,6 @@ const NCSC = () => {
               </div>
             </div>
 
-            {/* Signed by */}
             <div className="space-y-3">
               <p className="text-xs font-semibold text-primary uppercase tracking-widest border-b border-primary/20 pb-1">Signed / Approved By</p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
