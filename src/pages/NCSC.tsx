@@ -483,7 +483,7 @@ const NCSC = () => {
 
       {/* ── Payout Form Modal (Search-based) ── */}
       {showPayoutForm && (
-        <div className="fixed inset-0 bg-black/55 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
           <div className="bg-card border border-border rounded-2xl shadow-2xl w-full max-w-md p-6 space-y-4 animate-fade-in overflow-y-auto max-h-[90vh]">
             {/* Title */}
             <div className="flex items-center justify-between">
@@ -650,7 +650,7 @@ const NCSC = () => {
 
       {/* ── Notify Staff Panel (Admin Only) ── */}
       {showNotifPanel && isAdmin && (
-        <div className="fixed inset-0 bg-black/55 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
           <div className="bg-card border border-border rounded-2xl shadow-2xl w-full max-w-lg p-6 space-y-5 animate-fade-in overflow-y-auto max-h-[90vh]">
             {/* Header */}
             <div className="flex items-center justify-between">
@@ -743,7 +743,7 @@ const NCSC = () => {
 
       {/* ── Export Modal (Signatory) ── */}
       {exportModal && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
           <div className="bg-card border border-border rounded-2xl shadow-2xl w-full max-w-lg p-6 space-y-5 animate-fade-in overflow-y-auto max-h-[90vh]">
             <div className="flex items-center gap-3">
               <div className="w-9 h-9 rounded-xl flex items-center justify-center"
