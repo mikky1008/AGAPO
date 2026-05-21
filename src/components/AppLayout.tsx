@@ -22,7 +22,7 @@ const staffNavItems = [
 ];
 
 const adminOnlyNavItems = [
-  { to: "/agent-logs", icon: Bot,        label: "AI Agent Logs" },
+  { to: "/agent-logs", icon: Bot,        label: "Logs" },
   { to: "/users",      icon: UsersRound, label: "User Management" },
 ];
 

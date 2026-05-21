@@ -104,8 +104,8 @@ const AgentLogs = () => {
           <Bot className="w-5 h-5 text-amber-600" />
         </div>
         <div>
-          <h1 className="page-title">AI Agent Logs</h1>
-          <p className="page-subtitle">Audit trail of AI priority decisions and system activity</p>
+          <h1 className="page-title">Logs</h1>
+          <p className="page-subtitle">Audit trail of AI decisions and system activity</p>
         </div>
       </div>
 
