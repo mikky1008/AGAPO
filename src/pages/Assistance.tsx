@@ -7,7 +7,7 @@ import { useUserRole } from "@/hooks/useUserRole";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Search, Plus, Pencil, Trash2, RotateCcw, CalendarIcon } from "lucide-react";
+import { Search, Plus, Pencil, Trash2, RotateCcw, CalendarIcon, Bell, Send } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -32,6 +32,12 @@ const Assistance = () => {
   const { user } = useAuth();
   const { isAdmin } = useUserRole();
   const { toast } = useToast();
+
+  // Notify Staff panel state
+  const [showNotifPanel, setShowNotifPanel] = useState(false);
+  const [notifReleaseDate, setNotifReleaseDate] = useState("");
+  const [notifMessage, setNotifMessage] = useState("");
+  const [notifSending, setNotifSending] = useState(false);
 
   const { data: records = [] } = useQuery({
     queryKey: ["assistance_records", showDeleted],
@@ -197,6 +203,41 @@ const Assistance = () => {
     </>
   );
 
+  // ── Send Notification via Gmail SMTP ──────────────────────────
+  const handleSendNotification = async () => {
+    if (!notifReleaseDate) {
+      toast({ title: "Missing date", description: "Please select a release date.", variant: "destructive" });
+      return;
+    }
+    setNotifSending(true);
+    try {
+      const releaseFormatted = new Date(notifReleaseDate).toLocaleDateString("en-PH", {
+        weekday: "long", year: "numeric", month: "long", day: "numeric",
+      });
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { error } = await (supabase as any).functions.invoke("send-ncsc-release-notification", {
+        body: {
+          releaseDate: releaseFormatted,
+          rawDate: notifReleaseDate,
+          customMessage: notifMessage.trim() || null,
+          totalEligible: 0,
+          pendingPayouts: 0,
+          totalDisbursed: 0,
+        },
+      });
+      if (error) throw new Error(error.message);
+      toast({ title: "Notification sent!", description: `All staff & admins have been notified of the ${releaseFormatted} payout release.` });
+      setShowNotifPanel(false);
+      setNotifReleaseDate("");
+      setNotifMessage("");
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (e: any) {
+      toast({ title: "Failed to send", description: e.message || "Could not reach notification service.", variant: "destructive" });
+    } finally {
+      setNotifSending(false);
+    }
+  };
+
   return (
     <div className="space-y-6 animate-fade-in">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -205,6 +246,15 @@ const Assistance = () => {
           <p className="page-subtitle">{records.length} {showDeleted ? "archived" : "total"} records</p>
         </div>
         <div className="flex items-center gap-2">
+          {isAdmin && (
+            <button
+              onClick={() => setShowNotifPanel(true)}
+              className="flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium transition-all hover:opacity-90"
+              style={{ background: "linear-gradient(135deg, hsl(220,75%,52%), hsl(250,65%,55%))", color: "#fff" }}
+            >
+              <Bell className="w-4 h-4" /> Notify Staff
+            </button>
+          )}
           {isAdmin && (
             <Button
               variant="outline"
@@ -313,7 +363,7 @@ const Assistance = () => {
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Archive this record?</AlertDialogTitle>
-            <AlertDialogDescription>This record will be archived and hidden from staff. Admins can view archived records using the "View Archived" button.</AlertDialogDescription>
+            <AlertDialogDescription>This record will be archived and hidden from staff. Admins can view archived records using the &quot;View Archived&quot; button.</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
@@ -323,6 +373,78 @@ const Assistance = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* ── Notify Staff Panel (Admin Only) ── */}
+      <Dialog open={showNotifPanel && isAdmin} onOpenChange={(open) => { if (!open) setShowNotifPanel(false); }}>
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+          <div className="space-y-5">
+            <DialogHeader>
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
+                  style={{ background: "linear-gradient(135deg, hsl(220,75%,52%), hsl(250,65%,55%))" }}>
+                  <Bell className="w-4 h-4 text-white" />
+                </div>
+                <div>
+                  <DialogTitle style={{ fontFamily: "Sora, sans-serif" }}>Notify All Staff & Admins</DialogTitle>
+                  <p className="text-xs text-muted-foreground">Send NCSC payout release announcement via email</p>
+                </div>
+              </div>
+            </DialogHeader>
+
+            <div className="rounded-xl border border-blue-500/20 bg-blue-500/5 overflow-hidden">
+              <div className="px-4 py-2.5 border-b border-blue-500/15 flex items-center gap-2">
+                <div className="w-2 h-2 rounded-full bg-blue-400" />
+                <p className="text-xs font-semibold text-blue-400 uppercase tracking-wider">Email Template Preview</p>
+              </div>
+              <div className="p-4 space-y-2 text-xs text-muted-foreground font-mono">
+                <p><span className="text-blue-400">From:</span> AGAPO OSCA &lt;autobitofficial.ph@gmail.com&gt;</p>
+                <p><span className="text-blue-400">To:</span> All registered staff &amp; admins</p>
+                <p><span className="text-blue-400">Subject:</span> 📢 NCSC/ECA Payout Release — [Selected Date]</p>
+                <hr className="border-border/50 my-2" />
+                <p className="text-foreground/80">Body includes: release date and your custom message.</p>
+              </div>
+            </div>
+
+            <div>
+              <label className="field-label block text-xs mb-1">Payout Release Date <span className="text-red-400">*</span></label>
+              <input
+                type="date"
+                className="w-full bg-muted/50 border border-border rounded-xl px-3 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40"
+                value={notifReleaseDate}
+                onChange={(e) => setNotifReleaseDate(e.target.value)}
+              />
+            </div>
+
+            <div>
+              <label className="field-label block text-xs mb-1">Additional Message (optional)</label>
+              <textarea
+                className="w-full bg-muted/50 border border-border rounded-xl px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 resize-none"
+                placeholder="e.g. Please prepare the necessary documents. Report to the OSCA office by 8AM."
+                rows={3}
+                value={notifMessage}
+                onChange={(e) => setNotifMessage(e.target.value)}
+              />
+            </div>
+
+            <div className="flex gap-2 pt-1">
+              <button className="flex-1 px-4 py-2.5 rounded-xl border border-border text-sm font-medium text-muted-foreground hover:bg-muted/50 transition-colors"
+                onClick={() => setShowNotifPanel(false)}>Cancel</button>
+              <button
+                className="flex-1 px-4 py-2.5 rounded-xl text-sm font-bold text-white transition-all hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-2"
+                style={{ background: "linear-gradient(135deg, hsl(220,75%,52%), hsl(250,65%,55%))" }}
+                disabled={!notifReleaseDate || notifSending}
+                onClick={handleSendNotification}
+              >
+                {notifSending ? (
+                  <><span className="animate-spin inline-block w-3 h-3 border-2 border-white/30 border-t-white rounded-full" /> Sending...</>
+                ) : (
+                  <><Send className="w-4 h-4" /> Send Notification</>
+                )}
+              </button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
