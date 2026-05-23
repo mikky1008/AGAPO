@@ -50,7 +50,7 @@ function buildEmailHtml(p: ReleasePayload): string {
     <table width="100%" cellpadding="0" cellspacing="0"><tr>
       <td>
         <p style="margin:0 0 3px;color:#93c5fd;font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;">Office of Senior Citizens Affairs</p>
-        <h1 style="margin:0 0 4px;color:#ffffff;font-size:24px;font-weight:800;letter-spacing:-0.5px;">AGAPO &mdash; OSCA</h1>
+        <h1 style="margin:0 0 4px;color:#ffffff;font-size:24px;font-weight:800;letter-spacing:-0.5px;">GoldenReg</h1>
         <p style="margin:0;color:#bfdbfe;font-size:11px;">Barangay San Francisco, Mainit, Surigao del Norte</p>
       </td>
       <td align="right" style="vertical-align:middle;">
@@ -225,7 +225,7 @@ async function sendGmail(
   const boundary = `----=_AGAPO_${Date.now()}`;
   const b64Html = btoa(unescape(encodeURIComponent(html)));
   const message = [
-    `From: "AGAPO OSCA" <${gmailUser}>`,
+    `From: "GoldenReg" <${gmailUser}>`,
     `To: ${to}`,
     `Subject: ${subject}`,
     `MIME-Version: 1.0`,
