@@ -139,6 +139,9 @@ const Seniors = () => {
       s.address.toLowerCase().includes(search.toLowerCase())
   );
 
+  const filteredEligible = filtered.filter((s) => !(s as any).financial_ineligible);
+  const filteredIneligible = filtered.filter((s) => !!(s as any).financial_ineligible);
+
   const viewSenior = seniors.find((s) => s.id === viewSeniorId);
 
   const priorityColor = (level: string) => {
@@ -256,7 +259,15 @@ const Seniors = () => {
               </tr>
             </thead>
             <tbody>
-              {filtered.map((senior) => {
+              {/* ── Eligible Section ── */}
+              {filteredEligible.length > 0 && (
+                <tr className="bg-emerald-500/5 border-b border-emerald-500/20">
+                  <td colSpan={6} className="px-3 py-1.5 text-xs font-semibold text-emerald-400 uppercase tracking-wider">
+                    ✓ Eligible for Financial Assistance ({filteredEligible.length})
+                  </td>
+                </tr>
+              )}
+              {filteredEligible.map((senior) => {
                 const currentAge = calculateAge(senior.birth_date);
                 const isArchived = !!senior.deleted_at;
                 return (
@@ -265,15 +276,9 @@ const Seniors = () => {
                     <td className="p-3 text-sm text-muted-foreground">{currentAge}</td>
                     <td className="p-3 text-sm text-muted-foreground hidden sm:table-cell">{senior.address}</td>
                     <td className="p-3">
-                      {(senior as any).financial_ineligible ? (
-                        <span className="text-xs px-2 py-0.5 rounded-full border bg-amber-500/15 text-amber-400 border-amber-500/30" title={(senior as any).ineligibility_reason || ""}>
-                          ⚠️ Ineligible
-                        </span>
-                      ) : (
-                        <span className="text-xs px-2 py-0.5 rounded-full border bg-emerald-500/15 text-emerald-400 border-emerald-500/30">
-                          ✓ Eligible
-                        </span>
-                      )}
+                      <span className="text-xs px-2 py-0.5 rounded-full border bg-emerald-500/15 text-emerald-400 border-emerald-500/30">
+                        ✓ Eligible
+                      </span>
                     </td>
                     <td className="p-3 hidden md:table-cell">
                       {currentAge >= 100 ? (
@@ -299,11 +304,11 @@ const Seniors = () => {
                         {isAdmin && !isArchived && (
                           <Button
                             variant="ghost" size="sm"
-                            title={`${(senior as any).financial_ineligible ? "Mark as eligible" : "Mark as ineligible"} for financial assistance`}
-                            className={(senior as any).financial_ineligible ? "text-amber-400 hover:text-amber-300" : "text-muted-foreground"}
+                            title="Mark as ineligible for financial assistance"
+                            className="text-muted-foreground"
                             onClick={() => {
-                              setIneligibilityReason((senior as any).ineligibility_reason || "");
-                              setIneligibilityDialog({ id: senior.id, name: `${senior.first_name} ${senior.last_name}`, current: !!(senior as any).financial_ineligible, reason: (senior as any).ineligibility_reason || "" });
+                              setIneligibilityReason("");
+                              setIneligibilityDialog({ id: senior.id, name: `${senior.first_name} ${senior.last_name}`, current: false, reason: "" });
                             }}
                           >
                             <span className="text-sm">🚫</span>
@@ -324,6 +329,78 @@ const Seniors = () => {
                   </tr>
                 );
               })}
+
+              {/* ── Ineligible Section ── */}
+              {filteredIneligible.length > 0 && (
+                <tr className="bg-amber-500/5 border-b border-amber-500/20 border-t-2 border-t-amber-500/20">
+                  <td colSpan={6} className="px-3 py-1.5 text-xs font-semibold text-amber-400 uppercase tracking-wider">
+                    ⚠️ Ineligible for Financial Assistance ({filteredIneligible.length})
+                  </td>
+                </tr>
+              )}
+              {filteredIneligible.map((senior) => {
+                const currentAge = calculateAge(senior.birth_date);
+                const isArchived = !!senior.deleted_at;
+                return (
+                  <tr key={senior.id} className={`border-b border-border last:border-0 transition-colors ${isArchived ? "opacity-60" : "hover:bg-muted/30"}`}>
+                    <td className="p-3 text-sm font-medium text-foreground">{senior.first_name} {senior.last_name}</td>
+                    <td className="p-3 text-sm text-muted-foreground">{currentAge}</td>
+                    <td className="p-3 text-sm text-muted-foreground hidden sm:table-cell">{senior.address}</td>
+                    <td className="p-3">
+                      <span className="text-xs px-2 py-0.5 rounded-full border bg-amber-500/15 text-amber-400 border-amber-500/30" title={(senior as any).ineligibility_reason || ""}>
+                        ⚠️ Ineligible
+                      </span>
+                    </td>
+                    <td className="p-3 hidden md:table-cell">
+                      {currentAge >= 100 ? (
+                        <span className="text-xs px-2 py-0.5 rounded-full border bg-red-500/15 text-red-400 border-red-500/30">👑 Centenarian</span>
+                      ) : currentAge >= 80 ? (
+                        <span className="text-xs px-2 py-0.5 rounded-full border bg-amber-500/15 text-amber-400 border-amber-500/30">🏅 NCSC Eligible</span>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">—</span>
+                      )}
+                    </td>
+                    <td className="p-3">
+                      <div className="flex items-center gap-1">
+                        {!isArchived && (
+                          <>
+                            <Button variant="ghost" size="sm" onClick={() => setViewSeniorId(senior.id)} title="View">
+                              <Eye className="w-4 h-4" />
+                            </Button>
+                            <Button variant="ghost" size="sm" onClick={() => openEdit(senior)} title="Edit">
+                              <Pencil className="w-4 h-4" />
+                            </Button>
+                          </>
+                        )}
+                        {isAdmin && !isArchived && (
+                          <Button
+                            variant="ghost" size="sm"
+                            title="Restore eligibility for financial assistance"
+                            className="text-amber-400 hover:text-amber-300"
+                            onClick={() => {
+                              setIneligibilityReason((senior as any).ineligibility_reason || "");
+                              setIneligibilityDialog({ id: senior.id, name: `${senior.first_name} ${senior.last_name}`, current: true, reason: (senior as any).ineligibility_reason || "" });
+                            }}
+                          >
+                            <span className="text-sm">🚫</span>
+                          </Button>
+                        )}
+                        {isAdmin && !isArchived && (
+                          <Button variant="ghost" size="sm" onClick={() => setDeleteId(senior.id)} title="Archive" className="text-destructive hover:text-destructive">
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        )}
+                        {isAdmin && isArchived && (
+                          <Button variant="ghost" size="sm" onClick={() => restoreMutation.mutate(senior.id)} title="Restore" className="text-primary hover:text-primary">
+                            <RotateCcw className="w-4 h-4" />
+                          </Button>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+
               {filtered.length === 0 && (
                 <tr><td colSpan={6} className="p-8 text-center text-muted-foreground">No seniors found.</td></tr>
               )}
