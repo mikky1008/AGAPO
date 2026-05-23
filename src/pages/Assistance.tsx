@@ -397,7 +397,7 @@ const Assistance = () => {
                 <p className="text-xs font-semibold text-blue-400 uppercase tracking-wider">Email Template Preview</p>
               </div>
               <div className="p-4 space-y-2 text-xs text-muted-foreground font-mono">
-                <p><span className="text-blue-400">From:</span> AGAPO OSCA &lt;autobitofficial.ph@gmail.com&gt;</p>
+                <p><span className="text-blue-400">From:</span> GoldenReg &lt;autobitofficial.ph@gmail.com&gt;</p>
                 <p><span className="text-blue-400">To:</span> All registered staff &amp; admins</p>
                 <p><span className="text-blue-400">Subject:</span> 📢 NCSC/ECA Payout Release — [Selected Date]</p>
                 <hr className="border-border/50 my-2" />
