@@ -2,7 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { calculateAge } from "@/lib/priorityScoring";
-import { Bell, CheckCircle2, Clock, Download, FileText, Gift, Search, Send, Star, Trophy, Users } from "lucide-react";
+import { CheckCircle2, Clock, Download, FileText, Gift, Search, Star, Trophy, Users } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useUserRole } from "@/hooks/useUserRole";
@@ -42,10 +42,6 @@ const NCSC = () => {
   const searchRef = useRef<HTMLDivElement>(null);
 
   // Notification panel
-  const [showNotifPanel, setShowNotifPanel] = useState(false);
-  const [notifReleaseDate, setNotifReleaseDate] = useState("");
-  const [notifMessage, setNotifMessage] = useState("");
-  const [notifSending, setNotifSending] = useState(false);
 
   // Export
   const [exportModal, setExportModal] = useState<"csv" | "pdf" | null>(null);
@@ -159,41 +155,6 @@ const NCSC = () => {
       given_by: payoutGivenBy,
       remarks: payoutRemarks,
     });
-  };
-
-  // ── Send Notification via Gmail SMTP ──────────────────────────
-  const handleSendNotification = async () => {
-    if (!notifReleaseDate) {
-      toast({ title: "Missing date", description: "Please select a release date.", variant: "destructive" });
-      return;
-    }
-    setNotifSending(true);
-    try {
-      const releaseFormatted = new Date(notifReleaseDate).toLocaleDateString("en-PH", {
-        weekday: "long", year: "numeric", month: "long", day: "numeric",
-      });
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { error } = await (supabase as any).functions.invoke("send-ncsc-release-notification", {
-        body: {
-          releaseDate: releaseFormatted,
-          rawDate: notifReleaseDate,
-          customMessage: notifMessage.trim() || null,
-          totalEligible,
-          pendingPayouts,
-          totalDisbursed,
-        },
-      });
-      if (error) throw new Error(error.message);
-      toast({ title: "Notification sent!", description: `All staff & admins have been notified of the ${releaseFormatted} payout release.` });
-      setShowNotifPanel(false);
-      setNotifReleaseDate("");
-      setNotifMessage("");
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (e: any) {
-      toast({ title: "Failed to send", description: e.message || "Could not reach notification service.", variant: "destructive" });
-    } finally {
-      setNotifSending(false);
-    }
   };
 
   // ── Export helpers ──────────────────────────────────────────────
@@ -321,16 +282,6 @@ const NCSC = () => {
         </div>
 
         <div className="flex items-center gap-2 shrink-0 flex-wrap">
-          {/* Admin-only: Notify Staff button */}
-          {isAdmin && (
-            <button
-              onClick={() => setShowNotifPanel(true)}
-              className="flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium transition-all hover:opacity-90"
-              style={{ background: "linear-gradient(135deg, hsl(220,75%,52%), hsl(250,65%,55%))", color: "#fff" }}
-            >
-              <Bell className="w-4 h-4" /> Notify Staff
-            </button>
-          )}
           {/* Add Payout button */}
           <button
             onClick={() => setShowPayoutForm(true)}
@@ -639,96 +590,6 @@ const NCSC = () => {
                 disabled={!payoutSelectedSenior || !payoutSelectedMilestone || !payoutGivenBy.trim() || addPayout.isPending}
                 onClick={handleConfirmPayout}>
                 {addPayout.isPending ? "Saving..." : "Confirm & Save"}
-              </button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* ── Notify Staff Panel (Admin Only) ── */}
-      <Dialog open={showNotifPanel && isAdmin} onOpenChange={(open) => { if (!open) setShowNotifPanel(false); }}>
-        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
-          <div className="space-y-5">
-            {/* Header */}
-            <DialogHeader>
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
-                  style={{ background: "linear-gradient(135deg, hsl(220,75%,52%), hsl(250,65%,55%))" }}>
-                  <Bell className="w-4 h-4 text-white" />
-                </div>
-                <div>
-                  <DialogTitle style={{ fontFamily: "Sora, sans-serif" }}>Notify All Staff & Admins</DialogTitle>
-                  <p className="text-xs text-muted-foreground">Send NCSC payout release announcement via email</p>
-                </div>
-              </div>
-            </DialogHeader>
-
-            {/* Email preview card */}
-            <div className="rounded-xl border border-blue-500/20 bg-blue-500/5 overflow-hidden">
-              <div className="px-4 py-2.5 border-b border-blue-500/15 flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-blue-400" />
-                <p className="text-xs font-semibold text-blue-400 uppercase tracking-wider">Email Template Preview</p>
-              </div>
-              <div className="p-4 space-y-2 text-xs text-muted-foreground font-mono">
-                <p><span className="text-blue-400">From:</span> AGAPO OSCA &lt;autobitofficial.ph@gmail.com&gt;</p>
-                <p><span className="text-blue-400">To:</span> All registered staff & admins</p>
-                <p><span className="text-blue-400">Subject:</span> 📢 NCSC/ECA Payout Release — [Selected Date]</p>
-                <hr className="border-border/50 my-2" />
-                <p className="text-foreground/80">Body includes: release date, eligible senior count, pending milestones, total disbursed, and your custom message.</p>
-              </div>
-            </div>
-
-            {/* Release date */}
-            <div>
-              <label className="field-label block text-xs mb-1">Payout Release Date <span className="text-red-400">*</span></label>
-              <input
-                type="date"
-                className="w-full bg-muted/50 border border-border rounded-xl px-3 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40"
-                value={notifReleaseDate}
-                onChange={(e) => setNotifReleaseDate(e.target.value)}
-              />
-            </div>
-
-            {/* Custom message */}
-            <div>
-              <label className="field-label block text-xs mb-1">Additional Message (optional)</label>
-              <textarea
-                className="w-full bg-muted/50 border border-border rounded-xl px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 resize-none"
-                placeholder="e.g. Please prepare the necessary documents. Report to the OSCA office by 8AM."
-                rows={3}
-                value={notifMessage}
-                onChange={(e) => setNotifMessage(e.target.value)}
-              />
-            </div>
-
-            {/* Stats summary */}
-            <div className="grid grid-cols-3 gap-2 text-center">
-              {[
-                { label: "Eligible", value: totalEligible },
-                { label: "Pending", value: pendingPayouts },
-                { label: "Disbursed", value: `₱${(totalDisbursed / 1000).toFixed(0)}K` },
-              ].map((s) => (
-                <div key={s.label} className="rounded-xl bg-muted/30 border border-border p-2">
-                  <p className="text-base font-bold text-foreground" style={{ fontFamily: "Sora, sans-serif" }}>{s.value}</p>
-                  <p className="text-[10px] text-muted-foreground">{s.label}</p>
-                </div>
-              ))}
-            </div>
-
-            <div className="flex gap-2 pt-1">
-              <button className="flex-1 px-4 py-2.5 rounded-xl border border-border text-sm font-medium text-muted-foreground hover:bg-muted/50 transition-colors"
-                onClick={() => setShowNotifPanel(false)}>Cancel</button>
-              <button
-                className="flex-1 px-4 py-2.5 rounded-xl text-sm font-bold text-white transition-all hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-2"
-                style={{ background: "linear-gradient(135deg, hsl(220,75%,52%), hsl(250,65%,55%))" }}
-                disabled={!notifReleaseDate || notifSending}
-                onClick={handleSendNotification}
-              >
-                {notifSending ? (
-                  <><span className="animate-spin inline-block w-3 h-3 border-2 border-white/30 border-t-white rounded-full" /> Sending...</>
-                ) : (
-                  <><Send className="w-4 h-4" /> Send Notification</>
-                )}
               </button>
             </div>
           </div>
