@@ -55,7 +55,7 @@ const Assistance = () => {
   const { data: seniors = [] } = useQuery({
     queryKey: ["seniors"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("seniors").select("id, first_name, last_name");
+      const { data, error } = await supabase.from("seniors").select("id, first_name, last_name, financial_ineligible, ineligibility_reason");
       if (error) throw error;
       return data;
     },
@@ -63,6 +63,15 @@ const Assistance = () => {
 
   const addMutation = useMutation({
     mutationFn: async () => {
+      // Block financial assistance for ineligible seniors
+      if (form.type === "Financial") {
+        const senior = seniors.find((s: any) => s.id === form.seniorId);
+        if (senior?.financial_ineligible) {
+          throw new Error(
+            `This senior is not eligible for financial assistance.${senior.ineligibility_reason ? ` Reason: ${senior.ineligibility_reason}` : ""}`
+          );
+        }
+      }
       const { error } = await supabase.from("assistance_records").insert({
         senior_id: form.seniorId,
         type: form.type,
@@ -143,19 +152,35 @@ const Assistance = () => {
 
   const handleFormChange = (field: string, value: string) => setForm(prev => ({ ...prev, [field]: value }));
 
-  const renderFormFields = () => (
+  const renderFormFields = () => {
+    const selectedSenior = seniors.find((s: any) => s.id === form.seniorId);
+    const isFinancialBlocked = selectedSenior?.financial_ineligible && form.type === "Financial";
+    return (
     <>
       <div className="space-y-1.5">
         <Label>Senior Citizen</Label>
         <Select value={form.seniorId} onValueChange={(v) => handleFormChange("seniorId", v)}>
           <SelectTrigger><SelectValue placeholder="Select senior" /></SelectTrigger>
           <SelectContent>
-            {seniors.map((s) => (
-              <SelectItem key={s.id} value={s.id}>{s.first_name} {s.last_name}</SelectItem>
+            {seniors.map((s: any) => (
+              <SelectItem key={s.id} value={s.id}>
+                {s.first_name} {s.last_name}{s.financial_ineligible ? " ⚠️" : ""}
+              </SelectItem>
             ))}
           </SelectContent>
         </Select>
       </div>
+      {selectedSenior?.financial_ineligible && (
+        <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2.5 flex items-start gap-2">
+          <span className="text-amber-400 text-base shrink-0">⚠️</span>
+          <div>
+            <p className="text-xs font-semibold text-amber-400">Not eligible for financial assistance</p>
+            {selectedSenior.ineligibility_reason && (
+              <p className="text-xs text-amber-300/80 mt-0.5">{selectedSenior.ineligibility_reason}</p>
+            )}
+          </div>
+        </div>
+      )}
       <div className="space-y-1.5">
         <Label>Type</Label>
         <Select value={form.type} onValueChange={(v) => handleFormChange("type", v)}>
@@ -201,7 +226,7 @@ const Assistance = () => {
         </Popover>
       </div>
     </>
-  );
+  );};
 
   // ── Send Notification via Gmail SMTP ──────────────────────────
   const handleSendNotification = async () => {
