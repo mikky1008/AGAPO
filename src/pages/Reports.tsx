@@ -45,10 +45,14 @@ const Reports = () => {
   const downloadCSV = (type: "seniors" | "assistance" | "ncsc") => {
     let csv = "";
     if (type === "seniors") {
-      csv = "Name,Age,Gender,Address,Income Level,Living Status\n";
-      seniors.forEach((s: any) => {
+      csv = "Status,Name,Age,Gender,Address,Income Level,Living Status,Ineligibility Reason\n";
+      seniors.filter((s: any) => !s.financial_ineligible).forEach((s: any) => {
         const age = calculateAge(s.birth_date);
-        csv += `"${s.first_name} ${s.last_name}",${age},${s.gender},"${s.address}",${s.income_level || "Low"},${s.living_status || "N/A"}\n`;
+        csv += `"Eligible","${s.first_name} ${s.last_name}",${age},${s.gender},"${s.address}",${s.income_level || "Low"},${s.living_status || "N/A"},""\n`;
+      });
+      seniors.filter((s: any) => s.financial_ineligible).forEach((s: any) => {
+        const age = calculateAge(s.birth_date);
+        csv += `"Ineligible","${s.first_name} ${s.last_name}",${age},${s.gender},"${s.address}",${s.income_level || "Low"},${s.living_status || "N/A"},"${s.ineligibility_reason || ""}"\n`;
       });
     } else if (type === "assistance") {
       csv = "Senior,Type,Description,Amount,Date,Status,Given By\n";
@@ -88,10 +92,18 @@ const Reports = () => {
     if (type === "seniors") {
       doc.setFontSize(13);
       doc.text("Senior Citizens Report", 14, 32);
+
+      const eligibleSeniors = seniors.filter((s: any) => !s.financial_ineligible);
+      const ineligibleSeniors = seniors.filter((s: any) => s.financial_ineligible);
+
+      doc.setFontSize(10);
+      doc.setTextColor(60, 120, 60);
+      doc.text("Eligible Seniors", 14, 40);
+      doc.setTextColor(0, 0, 0);
       autoTable(doc, {
-        startY: 38,
+        startY: 44,
         head: [["Name", "Age", "Gender", "Address", "Income", "Living"]],
-        body: seniors.map((s: any) => [
+        body: eligibleSeniors.map((s: any) => [
           `${s.first_name} ${s.last_name}`,
           calculateAge(s.birth_date),
           s.gender,
@@ -100,7 +112,28 @@ const Reports = () => {
           s.living_status || "N/A",
         ]),
         styles: { fontSize: 7 },
-        headStyles: { fillColor: [139, 26, 16] },
+        headStyles: { fillColor: [22, 163, 74] },
+      });
+
+      const afterEligibleY = (doc as any).lastAutoTable.finalY + 8;
+      doc.setFontSize(10);
+      doc.setTextColor(180, 100, 0);
+      doc.text("Ineligible for Financial Assistance", 14, afterEligibleY);
+      doc.setTextColor(0, 0, 0);
+      autoTable(doc, {
+        startY: afterEligibleY + 4,
+        head: [["Name", "Age", "Gender", "Address", "Income", "Living", "Reason"]],
+        body: ineligibleSeniors.map((s: any) => [
+          `${s.first_name} ${s.last_name}`,
+          calculateAge(s.birth_date),
+          s.gender,
+          s.address,
+          s.income_level || "Low",
+          s.living_status || "N/A",
+          s.ineligibility_reason || "—",
+        ]),
+        styles: { fontSize: 7 },
+        headStyles: { fillColor: [202, 138, 4] },
       });
     } else if (type === "assistance") {
       doc.setFontSize(13);
