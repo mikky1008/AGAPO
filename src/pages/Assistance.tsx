@@ -162,11 +162,30 @@ const Assistance = () => {
         <Select value={form.seniorId} onValueChange={(v) => handleFormChange("seniorId", v)}>
           <SelectTrigger><SelectValue placeholder="Select senior" /></SelectTrigger>
           <SelectContent>
-            {seniors.map((s: any) => (
-              <SelectItem key={s.id} value={s.id}>
-                {s.first_name} {s.last_name}{s.financial_ineligible ? " ⚠️" : ""}
-              </SelectItem>
-            ))}
+            {seniors.filter((s: any) => !s.financial_ineligible).length > 0 && (
+              <>
+                <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                  Eligible
+                </div>
+                {seniors.filter((s: any) => !s.financial_ineligible).map((s: any) => (
+                  <SelectItem key={s.id} value={s.id}>
+                    {s.first_name} {s.last_name}
+                  </SelectItem>
+                ))}
+              </>
+            )}
+            {seniors.filter((s: any) => s.financial_ineligible).length > 0 && (
+              <>
+                <div className="px-2 py-1.5 mt-1 text-xs font-semibold text-amber-400 uppercase tracking-wider border-t border-border">
+                  ⚠️ Ineligible for Financial Aid
+                </div>
+                {seniors.filter((s: any) => s.financial_ineligible).map((s: any) => (
+                  <SelectItem key={s.id} value={s.id}>
+                    {s.first_name} {s.last_name}
+                  </SelectItem>
+                ))}
+              </>
+            )}
           </SelectContent>
         </Select>
       </div>
@@ -189,7 +208,6 @@ const Assistance = () => {
             <SelectItem value="Financial">Financial</SelectItem>
             <SelectItem value="Medical">Medical</SelectItem>
             <SelectItem value="Food">Food</SelectItem>
-            <SelectItem value="Other">Other</SelectItem>
           </SelectContent>
         </Select>
       </div>
