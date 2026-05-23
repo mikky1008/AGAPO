@@ -337,6 +337,27 @@ Deno.serve(async (req) => {
       }
     }
 
+    // ── Insert in-app notifications for all active staff & admins ──
+    const notifMessage = payload.customMessage
+      ? `📢 NCSC/ECA payout scheduled for ${payload.releaseDate}. ${payload.customMessage}`
+      : `📢 NCSC/ECA payout scheduled for ${payload.releaseDate}.`;
+
+    const notifRows = (profiles ?? []).map((p: any) => ({
+      user_id: p.user_id,
+      type: "info",
+      message: notifMessage,
+      read: false,
+    }));
+
+    if (notifRows.length > 0) {
+      const { error: notifError } = await supabaseAdmin
+        .from("notifications")
+        .insert(notifRows);
+      if (notifError) {
+        console.error("Failed to insert in-app notifications:", notifError.message);
+      }
+    }
+
     return new Response(
       JSON.stringify({ sent, total: emails.length, failed }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } },
