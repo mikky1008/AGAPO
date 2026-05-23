@@ -45,11 +45,10 @@ const Reports = () => {
   const downloadCSV = (type: "seniors" | "assistance" | "ncsc") => {
     let csv = "";
     if (type === "seniors") {
-      csv = "Name,Age,Gender,Address,Illnesses,Income Level,Living Status\n";
+      csv = "Name,Age,Gender,Address,Income Level,Living Status\n";
       seniors.forEach((s: any) => {
         const age = calculateAge(s.birth_date);
-        const illnesses = s.illnesses?.join("; ") || "None";
-        csv += `"${s.first_name} ${s.last_name}",${age},${s.gender},"${s.address}","${illnesses}",${s.income_level || "Low"},${s.living_status || "N/A"}\n`;
+        csv += `"${s.first_name} ${s.last_name}",${age},${s.gender},"${s.address}",${s.income_level || "Low"},${s.living_status || "N/A"}\n`;
       });
     } else if (type === "assistance") {
       csv = "Senior,Type,Description,Amount,Date,Status,Given By\n";
@@ -91,13 +90,12 @@ const Reports = () => {
       doc.text("Senior Citizens Report", 14, 32);
       autoTable(doc, {
         startY: 38,
-        head: [["Name", "Age", "Gender", "Address", "Illnesses", "Income", "Living"]],
+        head: [["Name", "Age", "Gender", "Address", "Income", "Living"]],
         body: seniors.map((s: any) => [
           `${s.first_name} ${s.last_name}`,
           calculateAge(s.birth_date),
           s.gender,
           s.address,
-          s.illnesses?.join(", ") || "None",
           s.income_level || "Low",
           s.living_status || "N/A",
         ]),
