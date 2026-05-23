@@ -3,18 +3,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Camera, User, CalendarIcon, ChevronLeft, ChevronRight } from "lucide-react";
 import { format, subYears, getYear, setYear, setMonth, getMonth } from "date-fns";
-
-const COMMON_ILLNESSES = [
-  "Hypertension", "Diabetes", "Arthritis", "Heart Disease",
-  "Asthma", "COPD", "Stroke", "Osteoporosis",
-  "Kidney Disease", "Cancer", "Dementia", "Depression / Anxiety",
-  "Tuberculosis", "Cataract / Glaucoma", "Anemia", "Gout",
-];
 
 interface SeniorFormData {
   firstName: string; lastName: string; birthDate: string; gender: string;
@@ -57,10 +49,6 @@ const SeniorForm = ({ onSubmit, initialData, initialPhotoUrl, submitLabel = "Reg
   const [form, setForm] = useState<SeniorFormData>(initialData || defaultForm);
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(initialPhotoUrl || null);
-  const [selectedIllnesses, setSelectedIllnesses] = useState<string[]>(
-    initialData?.illnesses ? initialData.illnesses.split(",").map(s => s.trim()).filter(Boolean) : []
-  );
-  const [otherIllness, setOtherIllness] = useState("");
   const [calendarOpen, setCalendarOpen] = useState(false);
   const [calendarMonth, setCalendarMonth] = useState<Date>(
     initialData?.birthDate ? new Date(initialData.birthDate) : MAX_BIRTH_DATE
@@ -73,11 +61,6 @@ const SeniorForm = ({ onSubmit, initialData, initialPhotoUrl, submitLabel = "Reg
   useEffect(() => {
     if (initialData) {
       setForm(initialData);
-      const parsed = initialData.illnesses
-        ? initialData.illnesses.split(",").map(s => s.trim()).filter(Boolean)
-        : [];
-      setSelectedIllnesses(parsed.filter(i => COMMON_ILLNESSES.includes(i)));
-      setOtherIllness(parsed.filter(i => !COMMON_ILLNESSES.includes(i)).join(", "));
       if (initialData.birthDate) setCalendarMonth(new Date(initialData.birthDate));
     }
   }, [initialData]);
@@ -105,11 +88,6 @@ const SeniorForm = ({ onSubmit, initialData, initialPhotoUrl, submitLabel = "Reg
   const touchField = (field: keyof SeniorFormData) =>
     setTouched(prev => ({ ...prev, [field]: true }));
 
-  const toggleIllness = (illness: string) =>
-    setSelectedIllnesses(prev =>
-      prev.includes(illness) ? prev.filter(i => i !== illness) : [...prev, illness]
-    );
-
   const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -121,16 +99,11 @@ const SeniorForm = ({ onSubmit, initialData, initialPhotoUrl, submitLabel = "Reg
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Touch all required fields
     setTouched({ firstName: true, lastName: true, birthDate: true, address: true });
     const errs = validate(form);
     setErrors(errs);
     if (Object.keys(errs).length > 0) return;
-    const allIllnesses = [
-      ...selectedIllnesses,
-      ...otherIllness.split(",").map(s => s.trim()).filter(Boolean),
-    ];
-    onSubmit({ ...form, illnesses: allIllnesses.join(", ") }, photoFile);
+    onSubmit({ ...form, illnesses: "" }, photoFile);
   };
 
   const selectedDate = form.birthDate ? new Date(form.birthDate) : undefined;
@@ -156,7 +129,7 @@ const SeniorForm = ({ onSubmit, initialData, initialPhotoUrl, submitLabel = "Reg
 
   return (
     <form onSubmit={handleSubmit} className="w-full" noValidate>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 gap-6">
 
         {/* LEFT COLUMN */}
         <div className="flex flex-col gap-5">
@@ -413,35 +386,7 @@ const SeniorForm = ({ onSubmit, initialData, initialPhotoUrl, submitLabel = "Reg
           <div className="block md:hidden">
             <Button type="submit" className="w-full">{submitLabel}</Button>
           </div>
-        </div>
-
-        {/* RIGHT COLUMN — Medical Conditions */}
-        <div className="flex flex-col gap-3">
-          {sectionLabel("Medical Conditions")}
-          <p className="text-xs text-muted-foreground -mt-2">Select all that apply. Health status will be assessed by AI agent.</p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 border border-border rounded-lg p-3 bg-muted/20 flex-1">
-            {COMMON_ILLNESSES.map((illness) => (
-              <div key={illness} className="flex items-center gap-2 py-0.5">
-                <Checkbox
-                  id={illness}
-                  checked={selectedIllnesses.includes(illness)}
-                  onCheckedChange={() => toggleIllness(illness)}
-                />
-                <label htmlFor={illness} className="text-xs text-foreground cursor-pointer leading-tight">
-                  {illness}
-                </label>
-              </div>
-            ))}
-          </div>
-          <div className="space-y-1">
-            <Label className="text-xs">Other conditions (comma-separated)</Label>
-            <Input
-              placeholder="e.g. Lupus, Parkinson's"
-              value={otherIllness}
-              onChange={(e) => setOtherIllness(e.target.value)}
-            />
-          </div>
-          <Button type="submit" className="w-full mt-auto hidden md:flex">{submitLabel}</Button>
+          <Button type="submit" className="w-full hidden md:flex">{submitLabel}</Button>
         </div>
 
       </div>
