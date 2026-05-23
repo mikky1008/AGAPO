@@ -236,6 +236,8 @@ export type Database = {
           created_by: string | null
           deleted_at: string | null
           emergency_contact: string | null
+          financial_ineligible: boolean
+          ineligibility_reason: string | null
           first_name: string
           gender: string
           health_status: string
