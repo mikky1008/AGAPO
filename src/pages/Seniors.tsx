@@ -25,6 +25,8 @@ const Seniors = () => {
   const [editSenior, setEditSenior] = useState<any>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [showDeleted, setShowDeleted] = useState(false);
+  const [ineligibilityDialog, setIneligibilityDialog] = useState<{ id: string; name: string; current: boolean; reason: string } | null>(null);
+  const [ineligibilityReason, setIneligibilityReason] = useState("");
   const queryClient = useQueryClient();
   const { user } = useAuth();
   const { isAdmin } = useUserRole();
@@ -111,6 +113,22 @@ const Seniors = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["seniors"] });
       toast({ title: "Senior Restored", description: "Record has been restored successfully." });
+    },
+    onError: (error: any) => toast({ title: "Error", description: error.message, variant: "destructive" }),
+  });
+
+  const toggleIneligibilityMutation = useMutation({
+    mutationFn: async ({ id, ineligible, reason }: { id: string; ineligible: boolean; reason: string }) => {
+      const { error } = await supabase
+        .from("seniors")
+        .update({ financial_ineligible: ineligible, ineligibility_reason: ineligible ? reason : null } as any)
+        .eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["seniors"] });
+      toast({ title: "Updated", description: "Financial assistance eligibility updated." });
+      setIneligibilityDialog(null);
     },
     onError: (error: any) => toast({ title: "Error", description: error.message, variant: "destructive" }),
   });
@@ -232,7 +250,7 @@ const Seniors = () => {
                 <th className="text-left p-3 text-xs font-medium text-muted-foreground uppercase">Name</th>
                 <th className="text-left p-3 text-xs font-medium text-muted-foreground uppercase">Age</th>
                 <th className="text-left p-3 text-xs font-medium text-muted-foreground uppercase hidden sm:table-cell">Address</th>
-                <th className="text-left p-3 text-xs font-medium text-muted-foreground uppercase">Illnesses</th>
+                <th className="text-left p-3 text-xs font-medium text-muted-foreground uppercase">Financial Aid</th>
                 <th className="text-left p-3 text-xs font-medium text-muted-foreground uppercase hidden md:table-cell">NCSC</th>
                 <th className="text-left p-3 text-xs font-medium text-muted-foreground uppercase">Actions</th>
               </tr>
@@ -240,7 +258,6 @@ const Seniors = () => {
             <tbody>
               {filtered.map((senior) => {
                 const currentAge = calculateAge(senior.birth_date);
-                const illnessCount = senior.illnesses?.length || 0;
                 const isArchived = !!senior.deleted_at;
                 return (
                   <tr key={senior.id} className={`border-b border-border last:border-0 transition-colors ${isArchived ? "opacity-60" : "hover:bg-muted/30"}`}>
@@ -248,9 +265,15 @@ const Seniors = () => {
                     <td className="p-3 text-sm text-muted-foreground">{currentAge}</td>
                     <td className="p-3 text-sm text-muted-foreground hidden sm:table-cell">{senior.address}</td>
                     <td className="p-3">
-                      <span className={`text-xs px-2 py-0.5 rounded-full border ${illnessCount === 0 ? "bg-red-500/15 text-red-400 border-red-500/30" : illnessCount === 1 ? "bg-amber-500/15 text-amber-400 border-amber-500/30" : "bg-red-500/15 text-red-400 border-red-500/30"}`}>
-                        {illnessCount === 0 ? "None" : `${illnessCount} illness${illnessCount > 1 ? "es" : ""}`}
-                      </span>
+                      {(senior as any).financial_ineligible ? (
+                        <span className="text-xs px-2 py-0.5 rounded-full border bg-amber-500/15 text-amber-400 border-amber-500/30" title={(senior as any).ineligibility_reason || ""}>
+                          ⚠️ Ineligible
+                        </span>
+                      ) : (
+                        <span className="text-xs px-2 py-0.5 rounded-full border bg-emerald-500/15 text-emerald-400 border-emerald-500/30">
+                          ✓ Eligible
+                        </span>
+                      )}
                     </td>
                     <td className="p-3 hidden md:table-cell">
                       {currentAge >= 100 ? (
@@ -272,6 +295,19 @@ const Seniors = () => {
                               <Pencil className="w-4 h-4" />
                             </Button>
                           </>
+                        )}
+                        {isAdmin && !isArchived && (
+                          <Button
+                            variant="ghost" size="sm"
+                            title={`${(senior as any).financial_ineligible ? "Mark as eligible" : "Mark as ineligible"} for financial assistance`}
+                            className={(senior as any).financial_ineligible ? "text-amber-400 hover:text-amber-300" : "text-muted-foreground"}
+                            onClick={() => {
+                              setIneligibilityReason((senior as any).ineligibility_reason || "");
+                              setIneligibilityDialog({ id: senior.id, name: `${senior.first_name} ${senior.last_name}`, current: !!(senior as any).financial_ineligible, reason: (senior as any).ineligibility_reason || "" });
+                            }}
+                          >
+                            <span className="text-sm">🚫</span>
+                          </Button>
                         )}
                         {isAdmin && !isArchived && (
                           <Button variant="ghost" size="sm" onClick={() => setDeleteId(senior.id)} title="Archive" className="text-destructive hover:text-destructive">
@@ -318,6 +354,68 @@ const Seniors = () => {
               submitLabel="Save Changes"
             />
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Financial Ineligibility Dialog */}
+      <Dialog open={!!ineligibilityDialog} onOpenChange={(open) => { if (!open) setIneligibilityDialog(null); }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle style={{ fontFamily: "Sora, sans-serif" }}>
+              {ineligibilityDialog?.current ? "Remove Ineligibility" : "Mark as Ineligible for Financial Aid"}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              {ineligibilityDialog?.current
+                ? `Remove the financial aid restriction for ${ineligibilityDialog?.name}? They will be eligible for financial assistance again.`
+                : `Mark ${ineligibilityDialog?.name} as ineligible for financial assistance.`}
+            </p>
+            {!ineligibilityDialog?.current && (
+              <div className="space-y-2">
+                <label className="text-xs font-medium text-foreground block">Reason <span className="text-red-400">*</span></label>
+                <div className="grid grid-cols-2 gap-2">
+                  {["Has SSS pension", "Has PAG-IBIG pension", "Has GSIS pension", "Has private pension", "Supported by family", "Other income source"].map((r) => (
+                    <button
+                      key={r}
+                      type="button"
+                      onClick={() => setIneligibilityReason(r)}
+                      className={`text-xs px-3 py-2 rounded-lg border text-left transition-colors ${ineligibilityReason === r ? "border-amber-500 bg-amber-500/10 text-amber-400" : "border-border text-muted-foreground hover:bg-muted/50"}`}
+                    >
+                      {r}
+                    </button>
+                  ))}
+                </div>
+                <input
+                  type="text"
+                  placeholder="Or type a custom reason..."
+                  value={ineligibilityReason}
+                  onChange={(e) => setIneligibilityReason(e.target.value)}
+                  className="w-full bg-muted/50 border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40"
+                />
+              </div>
+            )}
+            <div className="flex gap-2 pt-1">
+              <button
+                className="flex-1 px-4 py-2.5 rounded-xl border border-border text-sm font-medium text-muted-foreground hover:bg-muted/50 transition-colors"
+                onClick={() => setIneligibilityDialog(null)}
+              >Cancel</button>
+              <button
+                className={`flex-1 px-4 py-2.5 rounded-xl text-sm font-bold text-white transition-all hover:opacity-90 disabled:opacity-50 ${ineligibilityDialog?.current ? "bg-emerald-600" : "bg-amber-600"}`}
+                disabled={!ineligibilityDialog?.current && !ineligibilityReason.trim()}
+                onClick={() => {
+                  if (!ineligibilityDialog) return;
+                  toggleIneligibilityMutation.mutate({
+                    id: ineligibilityDialog.id,
+                    ineligible: !ineligibilityDialog.current,
+                    reason: ineligibilityReason.trim(),
+                  });
+                }}
+              >
+                {ineligibilityDialog?.current ? "✓ Restore Eligibility" : "⚠️ Mark Ineligible"}
+              </button>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
 
