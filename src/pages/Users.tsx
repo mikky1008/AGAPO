@@ -123,12 +123,11 @@ const Users = () => {
                 <th className="text-left p-3 text-xs font-medium text-muted-foreground uppercase">Role</th>
                 <th className="text-left p-3 text-xs font-medium text-muted-foreground uppercase">Status</th>
                 <th className="text-left p-3 text-xs font-medium text-muted-foreground uppercase hidden sm:table-cell">Joined</th>
-                <th className="text-left p-3 text-xs font-medium text-muted-foreground uppercase">Actions</th>
               </tr>
             </thead>
             <tbody>
               {isLoading && (
-                <tr><td colSpan={5} className="p-8 text-center text-muted-foreground text-sm">Loading users…</td></tr>
+                <tr><td colSpan={4} className="p-8 text-center text-muted-foreground text-sm">Loading users…</td></tr>
               )}
               {!isLoading && users.map((u) => {
                 const isSelf = u.user_id === currentUser?.id;
@@ -151,43 +150,11 @@ const Users = () => {
                     <td className="p-3 text-xs text-muted-foreground hidden sm:table-cell">
                       {new Date(u.created_at).toLocaleDateString()}
                     </td>
-                    <td className="p-3">
-                      <div className="flex items-center gap-1">
-                        {!isSelf && (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="text-xs h-7 px-2"
-                            disabled={setRoleMutation.isPending}
-                            onClick={() => setConfirmRole({
-                              userId: u.user_id,
-                              name: u.full_name || u.email,
-                              newRole: u.role === "admin" ? "staff" : "admin",
-                            })}
-                          >
-                            {u.role === "admin" ? "Make staff" : "Make admin"}
-                          </Button>
-                        )}
-                        {!isSelf && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className={`h-7 w-7 p-0 ${u.is_active ? "text-muted-foreground" : "text-primary"}`}
-                            title={u.is_active ? "Deactivate" : "Activate"}
-                            disabled={toggleActiveMutation.isPending}
-                            onClick={() => toggleActiveMutation.mutate({ userId: u.user_id, isActive: !u.is_active })}
-                          >
-                            {u.is_active ? <ToggleRight className="w-4 h-4" /> : <ToggleLeft className="w-4 h-4" />}
-                          </Button>
-                        )}
-                        {isSelf && <span className="text-xs text-muted-foreground italic">You</span>}
-                      </div>
-                    </td>
                   </tr>
                 );
               })}
               {!isLoading && users.length === 0 && (
-                <tr><td colSpan={5} className="p-8 text-center text-muted-foreground">No users found.</td></tr>
+                <tr><td colSpan={4} className="p-8 text-center text-muted-foreground">No users found.</td></tr>
               )}
             </tbody>
           </table>
