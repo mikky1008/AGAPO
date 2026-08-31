@@ -10,7 +10,6 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useTheme } from "@/contexts/ThemeContext";
 import NotificationBell from "@/components/NotificationBell";
-import ChatAgent from "@/components/ChatAgent";
 
 const staffNavItems = [
   { to: "/dashboard",  icon: LayoutDashboard, label: "Dashboard" },
@@ -234,7 +233,6 @@ const AppLayout = ({ children }: { children: ReactNode }) => {
         </header>
 
         <main className="flex-1 p-4 lg:p-6 overflow-auto">{children}</main>
-        <ChatAgent />
       </div>
     </div>
   );
