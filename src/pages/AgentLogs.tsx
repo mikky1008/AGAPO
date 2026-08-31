@@ -16,9 +16,41 @@ const AgentLogs = () => {
         .select("*, profiles!system_logs_performed_by_fkey(full_name, role)")
         .order("logged_at", { ascending: false })
         .limit(100);
-      if (error) {
-        // Fallback: if FK join fails, try matching performed_by to profiles.user_id manually
-        // ── Conditional returns AFTER all hooks ───────────────────
+
+      if (!error) return data ?? [];
+
+      // Fallback: if the FK join fails, fetch logs and profiles separately
+      // and match performed_by to profiles.user_id manually.
+      const { data: rawLogs, error: rawError } = await supabase
+        .from("system_logs")
+        .select("*")
+        .order("logged_at", { ascending: false })
+        .limit(100);
+      if (rawError) throw rawError;
+
+      const performerIds = Array.from(
+        new Set((rawLogs ?? []).map((log) => log.performed_by).filter(Boolean))
+      ) as string[];
+
+      let profilesById: Record<string, { full_name: string | null; role: string | null }> = {};
+      if (performerIds.length > 0) {
+        const { data: profilesData } = await supabase
+          .from("profiles")
+          .select("user_id, full_name, role")
+          .in("user_id", performerIds);
+        profilesById = Object.fromEntries(
+          (profilesData ?? []).map((p) => [p.user_id, { full_name: p.full_name, role: p.role }])
+        );
+      }
+
+      return (rawLogs ?? []).map((log) => ({
+        ...log,
+        profiles: log.performed_by ? profilesById[log.performed_by] ?? null : null,
+      }));
+    },
+  });
+
+  // ── Conditional returns AFTER all hooks ───────────────────
   if (roleLoading) {
     return (
       <div className="flex items-center justify-center py-20">
