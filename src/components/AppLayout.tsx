@@ -2,7 +2,7 @@ import { ReactNode, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard, Users, HandHeart, Trophy, FileText, LogOut,
-  Menu, PanelLeftClose, PanelLeft, User, UsersRound, Sun, Moon, Star,
+  Menu, PanelLeftClose, PanelLeft, User, UsersRound, Sun, Moon, Star, ScrollText,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -22,6 +22,7 @@ const staffNavItems = [
 
 const adminOnlyNavItems = [
   { to: "/users",      icon: UsersRound, label: "User Management" },
+  { to: "/agent-logs", icon: ScrollText, label: "Audit Log" },
 ];
 
 const BackgroundArt = () => (
