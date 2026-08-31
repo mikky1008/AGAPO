@@ -6,7 +6,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-const ADMIN_CODE = import.meta.env.VITE_ADMIN_CODE || "goldenreg-admin-2025";
 
 // ── Inject login styles once ──────────────────────────────────────────────────
 if (typeof document !== "undefined" && !document.getElementById("goldenreg-login-styles")) {
@@ -198,7 +197,6 @@ const Login = () => {
   const [signupPassword, setSignupPassword] = useState("");
   const [confirmPw,      setConfirmPw]      = useState("");
   const selectedRole = "admin" as const;
-  const [adminCode,      setAdminCode]      = useState("");
   const [showSignupPw,   setShowSignupPw]   = useState(false);
   const [showConfirmPw,  setShowConfirmPw]  = useState(false);
   const [signingUp,      setSigningUp]      = useState(false);
@@ -236,7 +234,6 @@ const Login = () => {
     if (!signupEmail.trim())           errs.email     = "Email is required.";
     if (signupPassword.length < 6)     errs.password  = "Password must be at least 6 characters.";
     if (signupPassword !== confirmPw)  errs.confirmPw = "Passwords do not match.";
-    if (adminCode !== ADMIN_CODE)      errs.adminCode = "Invalid admin code.";
     setSignupErrs(errs);
     if (Object.keys(errs).length) return;
     setSigningUp(true);
@@ -449,23 +446,6 @@ const Login = () => {
                   <FieldError msg={signupErrs.confirmPw} />
                 </div>
 
-                <div className="rounded-xl p-4 space-y-2" style={{
-                  background: "rgba(255,255,255,0.05)",
-                  border: `1px solid ${signupErrs.adminCode ? "rgba(248,113,113,0.55)" : "rgba(255,255,255,0.11)"}`,
-                }}>
-                  <div className="flex items-center gap-2 text-sm font-semibold text-white">
-                    <ShieldCheck className="w-4 h-4 text-red-400 shrink-0" />
-                    Admin Verification Code *
-                  </div>
-                  <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/45 pointer-events-none z-10" />
-                    <input type="password" placeholder="Enter admin code" value={adminCode}
-                      onChange={e => setAdminCode(e.target.value)}
-                      className={`gr-input-glass ${signupErrs.adminCode ? "has-error" : ""}`} />
-                  </div>
-                  <FieldError msg={signupErrs.adminCode} />
-                  <p className="text-[11px] text-white/40">Contact your administrator to get this code.</p>
-                </div>
 
                 <PrimaryBtn type="submit" disabled={signingUp}>
                   {signingUp ? "Creating account…" : "Create Account"}
