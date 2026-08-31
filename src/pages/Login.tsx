@@ -348,8 +348,8 @@ const Login = () => {
               className="grid grid-cols-2 w-full rounded-xl p-1 gap-1"
               style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)" }}
             >
-              <TabsTrigger value="login"  className="gr-tab rounded-[10px] text-sm font-semibold transition-all">Sign In</TabsTrigger>
-              <TabsTrigger value="signup" className="gr-tab rounded-[10px] text-sm font-semibold transition-all">Create Account</TabsTrigger>
+              <TabsTrigger value="login"  className="gr-tab rounded-[10px] text-sm font-semibold transition-all">Log In</TabsTrigger>
+              <TabsTrigger value="signup" className="gr-tab rounded-[10px] text-sm font-semibold transition-all">Sign In</TabsTrigger>
             </TabsList>
 
             {/* ══ SIGN IN ══ */}
