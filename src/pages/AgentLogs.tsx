@@ -77,7 +77,7 @@ const AgentLogs = () => {
         </div>
         <div>
           <h1 className="page-title">Logs</h1>
-          <p className="page-subtitle">Audit trail of AI decisions and system activity</p>
+          <p className="page-subtitle">Audit trail of system activity</p>
         </div>
       </div>
 
